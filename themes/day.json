@@ -1,0 +1,9 @@
+{
+    "font color": [65, 34, 52, 255],
+    "cursor color": [204, 0, 153, 255],
+    "ui color": [50, 26, 40, 255],
+    "ui background color": [194, 173, 207, 255],
+    "text background color": [234, 215, 215, 255],
+    "selection highlighting color": [255, 255, 153, 128],
+    "icon": "./themes/icons/sun.png"
+}

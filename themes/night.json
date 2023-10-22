@@ -1,0 +1,9 @@
+{
+    "font color": [255, 255, 255, 255],
+    "cursor color": [255, 255, 255, 255],
+    "ui color": [255, 255, 255, 255],
+    "ui background color": [128, 128, 128, 255],
+    "text background color": [0, 0, 0, 255],
+    "selection highlighting color": [0, 255, 255, 64],
+    "icon": "./themes/icons/moon.png"
+}
