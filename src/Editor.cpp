@@ -228,7 +228,10 @@ void Editor::insertNewLine() {
     if (lineSelected) {
         lineSelected = false;
         l->clear();
-        moveCursorRight();
+        if (Cursor.y >= (int)lines.size() - 1)
+            jumpToLineStart();
+        else
+            moveCursorRight();
         return;
     }        
     else if (selectionLength != 0) 
