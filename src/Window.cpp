@@ -106,8 +106,8 @@ void Window::update() {
 void Window::render() {
     SDL_RenderClear(renderer);
 
-    ui->render();
     editor->render();
+    ui->render();
 
     SDL_RenderPresent(renderer);
 }

@@ -67,10 +67,16 @@ bool Event::mouseClickRight() {
 void Event::handleTextEditorEvents(SDL_Keycode key) {
         switch (key) {
         case SDLK_UP:
-            o->editor->moveCursorUp();
+            if (SDL_GetModState() & KMOD_CTRL)
+                o->editor->scroll(-1);
+            else
+                o->editor->moveCursorUp();
             break;
         case SDLK_DOWN:
-            o->editor->moveCursorDown();
+            if (SDL_GetModState() & KMOD_CTRL)
+                o->editor->scroll(1);
+            else
+                o->editor->moveCursorDown();
             break;
         case SDLK_LEFT:
             if (SDL_GetModState() & KMOD_CTRL)
@@ -96,12 +102,12 @@ void Event::handleTextEditorEvents(SDL_Keycode key) {
         case SDLK_PAGEDOWN:
             o->editor->jumpToFileEnd();
             break;   
-        case SDLK_BACKSPACE:        // SUPPR CHAR
+        case SDLK_BACKSPACE:        // SUPPR (selection, current line, previous char)
             if (!o->editor->deleteSelection())
                 if (!o->editor->deleteCurrentLine())
                     o->editor->deletePreviousChar();
             break;
-        case SDLK_DELETE:
+        case SDLK_DELETE:           // DELETE (next line, next char)
             if (!o->editor->deleteNextLine()) {
                 o->editor->deleteNextChar();
             }
@@ -110,7 +116,7 @@ void Event::handleTextEditorEvents(SDL_Keycode key) {
             o->editor->insertNewLine();
             break;
         case SDLK_TAB:
-            o->editor->insertTab();
+            o->editor->insertTab(); // INSERT TAB (NOT WORKING)
             break;
         case SDLK_c:                // COPY
             if (SDL_GetModState() & KMOD_CTRL)

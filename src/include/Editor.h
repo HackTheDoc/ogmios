@@ -52,9 +52,10 @@ public:
     void jumpToLineEnd();
 
     void moveCursorUp();
-    void moveCursorDown();
+    bool moveCursorDown();
     void moveCursorLeft();
     void moveCursorRight();
+    void scroll(int s);
 
     void setClipboardText();
     void pasteClipboardText();
@@ -68,4 +69,6 @@ private:
 
     int selectionLength;
     bool lineSelected;
+
+    int scrollPosition;
 };

@@ -20,6 +20,8 @@ Editor::Editor(int w, int h) {
 
     selectionLength = 0;
     lineSelected = false;
+
+    scrollPosition = 0;
 }
 
 Editor::~Editor() {}
@@ -32,6 +34,8 @@ void Editor::init() {
 }
 
 void Editor::update() {
+    viewport.y = -scrollPosition * LineHeight + Window::ui->height();
+
     for (auto l : lines)
         l->update();
 }
@@ -304,10 +308,12 @@ bool Editor::deleteNextLine() {
 void Editor::jumpToFileStart() {
     Cursor.y = 0;
     jumpToLineStart();
+
+    scrollPosition = 0;
 }
 
 void Editor::jumpToFileEnd() {
-    Cursor.y = static_cast<int>(lines.size() - 1);
+    while (moveCursorDown()) {}
     jumpToLineEnd();
 }
 
@@ -333,18 +339,28 @@ void Editor::moveCursorUp() {
     Cursor.y--;
     Cursor.x = std::min(Cursor.x, static_cast<int>(lines[Cursor.y]->size()));
 
+    if (Cursor.y  < scrollPosition) {
+        scroll(-1);
+    }
+
     updateCursorPlacement();
 }
 
-void Editor::moveCursorDown() {
-    if (Cursor.y >= static_cast<int>(lines.size() - 1) ) return;
+bool Editor::moveCursorDown() {
+    if (Cursor.y >= static_cast<int>(lines.size() - 1) ) return false;
 
     selectionLength = 0;
 
     Cursor.y++;
     Cursor.x = std::min(Cursor.x, static_cast<int>(lines[Cursor.y]->size()));
-   
+
+    if ((Cursor.y - scrollPosition + 1) * LineHeight > Window::screen.h - Window::ui->height()) {
+        scroll(1);
+    }
+
     updateCursorPlacement();
+
+    return true;
 }
 
 void Editor::moveCursorLeft() {
@@ -370,6 +386,12 @@ void Editor::moveCursorRight() {
     }
     selectionLength = 0;
     updateCursorPlacement();
+}
+
+void Editor::scroll(int s) {
+    scrollPosition += s;
+
+    scrollPosition = std::max(0, std::min(scrollPosition, static_cast<int>(lines.size()-1)));
 }
 
 void Editor::save() {

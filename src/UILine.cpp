@@ -67,8 +67,11 @@ void UILine::setText(std::string text) {
 void UILine::setNumber(int n) {
     this->n = n;
 
-    number = Manager::GenerateText(std::to_string(n+1).c_str(), Window::theme.font, Editor::LeftMargin);
+    number = Manager::GenerateText(std::to_string(n+1).c_str(), Window::theme.font);
     SDL_QueryTexture(number, NULL, NULL, &numberRect.w, &numberRect.h);
+
+    if (numberRect.w > Editor::LeftMargin)
+        Editor::LeftMargin = numberRect.w + 4;
 }
 
 std::string UILine::getText() {
