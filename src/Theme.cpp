@@ -13,6 +13,7 @@ Theme::Theme() {
     font = {255,255,255,255};
     cursor = {255,255,255,255};
     ui = {255,255,255,255};
+    ui2 = {255,255,255,255};
     uiBackground = {0,0,0,255};
     textBackground = {0,0,0,255};
 
@@ -59,6 +60,12 @@ void Theme::load(Theme::Type t) {
     ui.g = uc[1];
     ui.b = uc[2];
     ui.a = uc[3];
+
+    auto u2c = data["ui2 color"];
+    ui2.r = u2c[0];
+    ui2.g = u2c[1];
+    ui2.b = u2c[2];
+    ui2.a = u2c[3];
 
     auto ubc = data["ui background color"];
     uiBackground.r = ubc[0];

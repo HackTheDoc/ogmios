@@ -1,9 +1,10 @@
 {
-    "font color": [255, 255, 255, 255],
-    "cursor color": [255, 255, 255, 255],
-    "ui color": [255, 255, 255, 255],
-    "ui background color": [128, 128, 128, 255],
-    "text background color": [0, 0, 0, 255],
-    "selection highlighting color": [0, 255, 255, 64],
+    "font color": [248, 248, 242, 255],
+    "cursor color": [248, 248, 242, 255],
+    "ui color": [189, 147, 249, 255],
+    "ui2 color": [189, 147, 249, 255],
+    "ui background color": [40, 42, 54, 255],
+    "text background color": [68, 71, 90, 255],
+    "selection highlighting color": [255, 121, 198, 64],
     "icon": "./themes/icons/moon.png"
 }

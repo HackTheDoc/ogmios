@@ -64,7 +64,7 @@ int Window::init() {
 
     event.linkTo(this);
 
-    theme.load(Theme::Type::DAY);
+    theme.load(Theme::Type::NIGHT);
 
     Manager::OpenFont("./fonts/Nunito-Regular.ttf");
 

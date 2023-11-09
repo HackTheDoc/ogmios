@@ -15,6 +15,7 @@ public:
     SDL_Color font;
     SDL_Color cursor;
     SDL_Color ui;
+    SDL_Color ui2;
     SDL_Color uiBackground;
     SDL_Color textBackground;
     SDL_Color selection;

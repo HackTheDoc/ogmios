@@ -27,9 +27,7 @@ void UILine::draw() {
     Manager::Draw(number, nullptr, &numberRect);
 
     SDL_Rect l = {Editor::LeftMargin - 2, numberRect.y+1, 1, numberRect.h-1};
-    SDL_Color c = {51,51,51,255}; 
-    /// TODO: add c to theme
-    Manager::DrawRect(&l, c);
+    Manager::DrawRect(&l, Window::theme.ui2);
 
     if (!text.empty())
         Manager::Draw(texture, nullptr, &textureRect);
