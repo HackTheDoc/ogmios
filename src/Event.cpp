@@ -39,13 +39,19 @@ void Event::handleButtonClick(UIButton::ID id) {
         o->editor->load();
         break;
     case UIButton::ID::MINUS_SIZE:
-        o->editor->updateFontSize(-2);
+        if (SDL_GetModState() & KMOD_CTRL)
+            o->editor->updateFontSize(Manager::MIN_FONT_SIZE - Window::theme.fontSize);
+        else
+            o->editor->updateFontSize(-2);
         break;
     case UIButton::ID::DEFAULT_SIZE:
-        o->editor->updateFontSize(Manager::DEFAULT_FONT_SIZE - Window::theme.fontSize);
+        o->editor->resetFontSize();
         break;
     case UIButton::ID::PLUS_SIZE:
-        o->editor->updateFontSize(2);
+        if (SDL_GetModState() & KMOD_CTRL)
+            o->editor->updateFontSize(Manager::MAX_FONT_SIZE - Window::theme.fontSize);
+        else
+            o->editor->updateFontSize(2);
         break;
     case UIButton::ID::THEME_ICON:
         o->switchTheme();

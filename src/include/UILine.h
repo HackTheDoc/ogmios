@@ -31,6 +31,8 @@ public:
 
     int height();
 
+    void useAsMargin();
+
 private:
     std::string text;
     SDL_Texture* texture;

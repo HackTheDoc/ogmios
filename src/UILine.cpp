@@ -37,6 +37,7 @@ void UILine::draw() {
 
 void UILine::update() {
     numberRect.y = n * Editor::LineHeight + 2;
+    numberRect.x = (Editor::LeftMargin - numberRect.w) / 2;
     
     textureRect.x = Editor::LeftMargin;
     textureRect.y = numberRect.y;
@@ -71,7 +72,7 @@ void UILine::setNumber(int n) {
     SDL_QueryTexture(number, NULL, NULL, &numberRect.w, &numberRect.h);
 
     if (numberRect.w > Editor::LeftMargin)
-        Editor::LeftMargin = numberRect.w + 4;
+        Editor::LeftMargin = numberRect.w + 8;
 }
 
 std::string UILine::getText() {
@@ -112,4 +113,8 @@ void UILine::clear() {
 
 int UILine::height() {
     return numberRect.h;
+}
+
+void UILine::useAsMargin() {
+    Editor::LeftMargin = numberRect.w + 8;
 }

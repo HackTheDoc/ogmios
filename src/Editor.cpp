@@ -29,11 +29,12 @@ Editor::~Editor() {}
 void Editor::init() {
     UILine* l = new UILine("", 0);
     lines.push_back(l);
-
+    l->useAsMargin();
     jumpToFileStart();
 }
 
 void Editor::update() {
+    viewport.h = LineHeight * lines.size();
     viewport.y = -scrollPosition * LineHeight + Window::ui->height();
 
     for (auto l : lines)
@@ -85,8 +86,6 @@ void Editor::destroy() {
 void Editor::reload() {
     for (auto l : lines)
         l->reload();
-
-    updateCursorPlacement();
 }
 
 void Editor::place(int x, int y) {
@@ -112,13 +111,36 @@ void Editor::updateCursorPlacement() {
 
 void Editor::updateFontSize(int s) {
     Window::theme.fontSize += s;
+    if (Window::theme.fontSize < Manager::MIN_FONT_SIZE || Window::theme.fontSize > Manager::MAX_FONT_SIZE) {
+        Window::theme.fontSize -= s;
+        return;
+    }
 
     Manager::SetFontSize(Window::theme.fontSize);
 
     LineHeight += s;
-    LeftMargin += s;
 
     reload();
+
+    lines.back()->useAsMargin();
+
+    updateCursorPlacement();
+}
+
+
+void Editor::resetFontSize() {
+    Window::theme.fontSize = Manager::DEFAULT_FONT_SIZE;
+
+    Manager::SetFontSize(Manager::DEFAULT_FONT_SIZE);
+
+    LineHeight = DEFAULT_LINE_HEIGHT;
+    LeftMargin = DEFAULT_LEFT_MARGIN;
+
+    reload();
+
+    lines.back()->useAsMargin();
+
+    updateCursorPlacement();
 }
 
 void Editor::insertChar(char c) {
@@ -145,7 +167,7 @@ void Editor::deletePreviousChar() {
 }
 
 void Editor::deleteNextChar() {
-    if (Cursor.x >= static_cast<int>(lines[Cursor.y]->size())) return
+    if (Cursor.x >= (int)lines[Cursor.y]->size()) return;
     
     lines[Cursor.y]->erase(Cursor.x, 1);
 }
@@ -203,8 +225,6 @@ bool Editor::deleteSelection() {
         Cursor.x = (int)l->size();
         updateCursorPlacement();
 
-        viewport.h -= LineHeight;
-
         return true;
     }
 
@@ -256,8 +276,6 @@ void Editor::insertNewLine() {
     Cursor.x = 0;
     
     updateCursorPlacement();
-
-    viewport.h += LineHeight;
 }
 
 bool Editor::deleteCurrentLine() {
@@ -282,15 +300,13 @@ bool Editor::deleteCurrentLine() {
         l->append(oldLine);
     }
 
-    viewport.h -= LineHeight;
-
     return true;
 }
 
 bool Editor::deleteNextLine() {
     UILine* l = lines[Cursor.y];
 
-    if (Cursor.x != static_cast<int>(l->size()) || Cursor.y >= static_cast<int>(lines.size() - 1)) 
+    if (Cursor.x != (int)l->size() || Cursor.y >= (int)lines.size() - 1) 
         return false;
 
     UILine* lToDelete = lines[Cursor.y + 1];
@@ -302,8 +318,6 @@ bool Editor::deleteNextLine() {
     if (!oldLine.empty()) {
         l->append(oldLine);
     }
-
-    viewport.h -= LineHeight;
 
     return true;
 }

@@ -30,6 +30,7 @@ public:
 
     void updateCursorPlacement();
     void updateFontSize(int s);
+    void resetFontSize();
 
     void insertChar(char c);
     void insertTab();

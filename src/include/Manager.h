@@ -9,6 +9,8 @@
 class Manager {
 public:
     static const int DEFAULT_FONT_SIZE;
+    static const int MIN_FONT_SIZE;
+    static const int MAX_FONT_SIZE;
 
     static TTF_Font* font;
     

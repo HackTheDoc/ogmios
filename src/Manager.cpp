@@ -5,6 +5,8 @@
 #include <iostream>
 
 const int Manager::DEFAULT_FONT_SIZE = 16;
+const int Manager::MIN_FONT_SIZE = 8;
+const int Manager::MAX_FONT_SIZE = 512;
 
 TTF_Font* Manager::font = nullptr;
 
