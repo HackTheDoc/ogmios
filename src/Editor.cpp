@@ -1,9 +1,9 @@
 #include "include/Editor.h"
 
+#include "include/File.h"
 #include "include/Window.h"
 #include "include/tinyfiledialogs.h"
 
-#include <fstream>
 #include <iostream>
 
 const int Editor::DEFAULT_LEFT_MARGIN = 24;
@@ -13,6 +13,13 @@ int Editor::LeftMargin = Editor::DEFAULT_LEFT_MARGIN;
 int Editor::LineHeight = Editor::DEFAULT_LINE_HEIGHT;
 SDL_Point Editor::Cursor = {0,0};
 std::vector<UILine*> Editor::lines = {};
+
+std::vector<std::string> Editor::Format() {
+    std::vector<std::string> text;
+    for (UILine* l : Editor::lines) 
+        text.push_back(l->getText());
+    return text;
+}
 
 Editor::Editor(int w, int h) {
     viewport = {0,0,w,h};
@@ -412,38 +419,29 @@ void Editor::scroll(int s) {
 }
 
 void Editor::save() {
-    char const * filterPatterns[2] = { "*.txt", "*.text" };
-    char* path = tinyfd_saveFileDialog("Save", "output/unknown.txt", 2, filterPatterns, NULL);
+    char* path = tinyfd_saveFileDialog("Save", "output/unknown.txt", 2, File::Filters, NULL);
     
-    if (path != NULL) {
-        std::ofstream outfile(path);
-        for (auto l : lines) {
-            std::string t = l->getText();
-            outfile << t << std::endl;
-        }
-        outfile.close();
-    } else {
+    bool success = File::Export(path, Format());
+    if (!success)
         tinyfd_messageBox("Ogmios", "Cannot save the file !", "ok", "error", 1);
-    }
 }
 
 void Editor::load() {
-    char const * filterPatterns[2] = { "*.txt", "*.text" };
-    char* path = tinyfd_openFileDialog("Open", "output/unknown.txt", 2, filterPatterns, NULL, 0);
-
+    char* path = tinyfd_openFileDialog("Open", "output/unknown.txt", 2, File::Filters, NULL, 0);
+    
     if (path != NULL) {
         lines.clear();
-        std::ifstream infile(path);
-        std::string t;
-        int n = 0;
-        while (std::getline(infile, t)) {
-            UILine* l = new UILine(t, n);
+
+        std::vector<std::string> text = File::LoadTXT(path);
+        
+        for (unsigned int i = 0; i < text.size(); i++) {
+            UILine* l = new UILine(text[i], i);
             lines.push_back(l);
         }
-        infile.close();
 
         jumpToFileEnd();
-    } else {
+    }
+    else {
         tinyfd_messageBox("Ogmios", "Cannot open the file !", "ok", "error", 1);
     }
 }

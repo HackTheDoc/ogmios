@@ -15,6 +15,8 @@ public:
     static SDL_Point Cursor;
     static std::vector<UILine*> lines;
 
+    static std::vector<std::string> Format();
+
     Editor(int w, int h);
     ~Editor();
 
