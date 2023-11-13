@@ -4,7 +4,9 @@
 #include "include/Window.h"
 #include "include/tinyfiledialogs.h"
 
+#include <fstream>
 #include <iostream>
+#include <nlohmann/json.hpp>
 
 const int Editor::DEFAULT_LEFT_MARGIN = 24;
 const int Editor::DEFAULT_LINE_HEIGHT = 22;
@@ -29,15 +31,19 @@ Editor::Editor(int w, int h) {
     lineSelected = false;
 
     scrollPosition = 0;
+
+    currentFile = "output/unknown.txt";
+
+    fileSaved = false;
 }
 
 Editor::~Editor() {}
 
 void Editor::init() {
-    UILine* l = new UILine("", 0);
-    lines.push_back(l);
-    l->useAsMargin();
-    jumpToFileStart();
+    if (fs::exists("config.json"))
+        loadConfig();
+    else
+        createNewConfig();
 }
 
 void Editor::update() {
@@ -77,6 +83,8 @@ void Editor::render() {
 }
 
 void Editor::clear() {
+    saveConfig();
+
     for (auto l : lines)
         l->destroy();
     lines.clear();
@@ -418,16 +426,32 @@ void Editor::scroll(int s) {
     scrollPosition = std::max(0, std::min(scrollPosition, static_cast<int>(lines.size()-1)));
 }
 
-void Editor::save() {
-    char* path = tinyfd_saveFileDialog("Save", "output/unknown.txt", 4, File::Filters, NULL);
+void Editor::saveCurrent() {
+    if (fileSaved) {
+        saveNew();
+        return;
+    }
+
+    bool success = File::Export(currentFile, Format());
     
-    bool success = File::Export(path, Format());
-    if (!success)
+    if (success)
+        saveConfig();
+    else
+        tinyfd_messageBox("Ogmios", "Cannot save the file !", "ok", "error", 1);
+}
+
+void Editor::saveNew() {
+    char* path = tinyfd_saveFileDialog("Save", currentFile.c_str(), 4, File::Filters, NULL);
+    
+    fileSaved = File::Export(path, Format());
+    if (fileSaved)
+        currentFile = path;
+    else
         tinyfd_messageBox("Ogmios", "Cannot save the file !", "ok", "error", 1);
 }
 
 void Editor::load() {
-    char* path = tinyfd_openFileDialog("Open", "output/unknown.txt", 4, File::Filters, NULL, 0);
+    char* path = tinyfd_openFileDialog("Open", currentFile.c_str(), 4, File::Filters, NULL, 0);
     
     if (path != NULL) {
         lines.clear();
@@ -440,6 +464,8 @@ void Editor::load() {
         }
 
         jumpToFileEnd();
+
+        fileSaved = true;
     }
     else {
         tinyfd_messageBox("Ogmios", "Cannot open the file !", "ok", "error", 1);
@@ -474,4 +500,86 @@ void Editor::pasteClipboardText() {
     updateCursorPlacement();
 
     SDL_free(cbt);
+}
+
+void Editor::loadConfig() {
+    std::ifstream infile("config.json");
+    nlohmann::json config;
+    infile >> config;
+    infile.close();
+
+    currentFile = config["last file"];
+    if (currentFile.empty() || !fs::exists(currentFile)) {
+        UILine* l = new UILine("", 0);
+        lines.push_back(l);
+        l->useAsMargin();
+        jumpToFileStart();
+
+        currentFile = "output/unknown.txt";
+        return;
+    }
+
+    std::vector<std::string> text = File::LoadTXT(currentFile);
+    
+    LeftMargin = config["editor left margin"];
+    Manager::SetFontSize(config["font size"]);
+    LineHeight = config["line height"];
+
+    for (unsigned int i = 0; i < text.size(); i++) {
+        UILine* l = new UILine(text[i], i);
+        lines.push_back(l);
+    }
+
+    Cursor.x = config["cursor x"];
+    Cursor.y = config["cursor y"];
+    scrollPosition = config["scroll position"];
+
+    updateCursorPlacement();
+
+    fileSaved = true;
+}
+
+void Editor::createNewConfig() {
+    nlohmann::json config = {
+        {"last file"            , "output/unknown.txt"          },
+        {"cursor x"             , 0                             },
+        {"cursor y"             , 0                             },
+        {"scroll position"      , 0                             },
+        {"editor left margin"   , DEFAULT_LEFT_MARGIN           },
+        {"line height"          , DEFAULT_LINE_HEIGHT           },
+        {"font size"            , Manager::DEFAULT_FONT_SIZE    }
+    };
+
+    std::ofstream outfile("config.json");
+    outfile << std::setw(4) << config;
+    outfile.close();
+
+    UILine* l = new UILine("", 0);
+    lines.push_back(l);
+    l->useAsMargin();
+    jumpToFileStart();
+
+    currentFile = "output/unknown.txt";
+}
+
+void Editor::saveConfig(char* path) {
+    std::ifstream infile("config.json");
+    nlohmann::json config;
+    infile >> config;
+    infile.close();
+
+    if (path != NULL)
+        config["last file"] = path;
+    
+    config["cursor x"] = Cursor.x;
+    config["cursor y"] = Cursor.y;
+    config["scroll position"] = scrollPosition;
+
+    config["editor left margin"] = Editor::LeftMargin;
+    config["line height"] = Editor::LineHeight;
+    config["font size"] = Window::theme.fontSize;
+
+    std::ofstream outfile("config.json");
+    outfile << std::setw(4) << config;
+    outfile.close();
 }

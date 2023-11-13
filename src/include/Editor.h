@@ -63,7 +63,8 @@ public:
     void setClipboardText();
     void pasteClipboardText();
 
-    void save();
+    void saveCurrent();
+    void saveNew();
     void load();
 
 private:
@@ -74,4 +75,11 @@ private:
     bool lineSelected;
 
     int scrollPosition;
+
+    std::string currentFile;
+    bool fileSaved;
+
+    void loadConfig();
+    void createNewConfig();
+    void saveConfig(char* path = NULL);
 };

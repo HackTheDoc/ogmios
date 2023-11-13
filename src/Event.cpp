@@ -33,7 +33,7 @@ void Event::linkTo(Window* w) {
 void Event::handleButtonClick(UIButton::ID id) {
     switch (id) {
     case UIButton::ID::SAVE:
-        o->editor->save();
+        o->editor->saveCurrent();
         break;
     case UIButton::ID::LOAD:
         o->editor->load();
@@ -133,8 +133,12 @@ void Event::handleTextEditorEvents(SDL_Keycode key) {
                 o->editor->pasteClipboardText();
             break;
         case SDLK_s:                // SAVE
-            if (SDL_GetModState() & KMOD_CTRL)
-                o->editor->save();
+            if (SDL_GetModState() & KMOD_CTRL) {
+                if (SDL_GetModState() & KMOD_SHIFT)
+                    o->editor->saveNew();
+                else
+                    o->editor->saveCurrent();
+            }
             break;
         case SDLK_o:                // OPEN
             if (SDL_GetModState() & KMOD_CTRL)
