@@ -144,6 +144,10 @@ void Event::handleTextEditorEvents(SDL_Keycode key) {
             if (SDL_GetModState() & KMOD_CTRL)
                 o->editor->load();
             break;
+        case SDLK_n:                // NEW FILE
+            if (SDL_GetModState() & KMOD_CTRL)
+                o->editor->newFile();
+            break;
         case SDLK_l:                // SELECT LINE
             if (SDL_GetModState() & KMOD_CTRL)
                 o->editor->selectLine();

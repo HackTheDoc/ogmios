@@ -67,6 +67,8 @@ public:
     void saveNew();
     void load();
 
+    void newFile(bool checkIfSaved = true);
+
 private:
     SDL_Rect viewport;
     SDL_Rect cursorRect;

@@ -37,7 +37,9 @@ Editor::Editor(int w, int h) {
     fileSaved = false;
 }
 
-Editor::~Editor() {}
+Editor::~Editor() {
+    saveConfig();
+}
 
 void Editor::init() {
     if (fs::exists("config.json"))
@@ -83,13 +85,9 @@ void Editor::render() {
 }
 
 void Editor::clear() {
-    saveConfig();
-
     for (auto l : lines)
         l->destroy();
     lines.clear();
-
-    init();
 }
 
 void Editor::destroy() {
@@ -502,6 +500,28 @@ void Editor::pasteClipboardText() {
     SDL_free(cbt);
 }
 
+void Editor::newFile(bool checkIfSaved) {
+    if (checkIfSaved && !fileSaved) {
+        std::cout << "file not save !!!!" << std::endl;
+        int uinput = tinyfd_messageBox("Title", "File not saved!\nDo you want to save?", "yesnocancel", "warning", 0);
+        
+        if (uinput == 0) {
+            return;
+        }
+        else if (uinput == 1)
+            saveCurrent();
+    }
+
+    clear();
+
+    UILine* l = new UILine("", 0);
+    lines.push_back(l);
+    l->useAsMargin();
+    jumpToFileStart();
+
+    currentFile = "output/unknown.txt";
+}
+
 void Editor::loadConfig() {
     std::ifstream infile("config.json");
     nlohmann::json config;
@@ -510,12 +530,7 @@ void Editor::loadConfig() {
 
     currentFile = config["last file"];
     if (currentFile.empty() || !fs::exists(currentFile)) {
-        UILine* l = new UILine("", 0);
-        lines.push_back(l);
-        l->useAsMargin();
-        jumpToFileStart();
-
-        currentFile = "output/unknown.txt";
+        newFile(false);
         return;
     }
 
@@ -554,12 +569,7 @@ void Editor::createNewConfig() {
     outfile << std::setw(4) << config;
     outfile.close();
 
-    UILine* l = new UILine("", 0);
-    lines.push_back(l);
-    l->useAsMargin();
-    jumpToFileStart();
-
-    currentFile = "output/unknown.txt";
+    newFile(false);
 }
 
 void Editor::saveConfig(char* path) {
