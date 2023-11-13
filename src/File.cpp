@@ -1,5 +1,6 @@
 #include "include/File.h"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 
@@ -10,6 +11,8 @@ const char* File::Filters[4] = {
     "*.md",
     "*.markdown"
 };
+
+const std::vector<char> File::MardkdownFlags = {'#'};
 
 /* ----- IMPORT FUNCTIONS ----- */
 std::vector<std::string> File::LoadTXT(fs::path path) {
@@ -28,8 +31,6 @@ std::vector<std::string> File::LoadTXT(fs::path path) {
 
 /* ----- EXPORT FUNCTIONS ----- */
 bool File::Export(fs::path path, std::vector<std::string> text) {
-    if (!fs::exists(path));
-
     std::string extension = path.extension();
 
     if (extension == ".txt" || extension == ".text")
@@ -54,7 +55,16 @@ bool File::ExportToTXT(fs::path path, std::vector<std::string> text) {
 }
 
 bool File::ExportToMD(fs::path path, std::vector<std::string> text) {
-    ExportToTXT(path, text);
+    std::ofstream outfile(path);
+
+    for (auto l : text) {
+        outfile << l << std::endl;
+
+        if (std::find(MardkdownFlags.begin(), MardkdownFlags.end(), l[0]) != MardkdownFlags.end());
+            outfile << std::endl;
+    }
+    
+    outfile.close();
 
     return true;
 }

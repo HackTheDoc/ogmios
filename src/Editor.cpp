@@ -419,7 +419,7 @@ void Editor::scroll(int s) {
 }
 
 void Editor::save() {
-    char* path = tinyfd_saveFileDialog("Save", "output/unknown.txt", 2, File::Filters, NULL);
+    char* path = tinyfd_saveFileDialog("Save", "output/unknown.txt", 4, File::Filters, NULL);
     
     bool success = File::Export(path, Format());
     if (!success)
@@ -427,7 +427,7 @@ void Editor::save() {
 }
 
 void Editor::load() {
-    char* path = tinyfd_openFileDialog("Open", "output/unknown.txt", 2, File::Filters, NULL, 0);
+    char* path = tinyfd_openFileDialog("Open", "output/unknown.txt", 4, File::Filters, NULL, 0);
     
     if (path != NULL) {
         lines.clear();
