@@ -8,7 +8,7 @@ protected:
 
 public:
     static const int span = 5;
-    
+
     virtual void draw() {}
     virtual void update() {}
     virtual void destroy() {}
@@ -18,12 +18,11 @@ public:
         rect.y = y;
     }
 
-    int x() {return rect.x;}
+    int x() { return rect.x; }
 
-    int y() {return rect.y;}
+    int y() { return rect.y; }
 
-    int width() {return rect.w;}
+    int width() { return rect.w; }
 
-    int height() {return rect.h;}
-
+    int height() { return rect.h; }
 };

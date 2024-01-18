@@ -13,19 +13,19 @@ const int Editor::DEFAULT_LINE_HEIGHT = 22;
 
 int Editor::LeftMargin = Editor::DEFAULT_LEFT_MARGIN;
 int Editor::LineHeight = Editor::DEFAULT_LINE_HEIGHT;
-SDL_Point Editor::Cursor = {0,0};
+SDL_Point Editor::Cursor = { 0,0 };
 std::vector<UILine*> Editor::lines = {};
 
 std::vector<std::string> Editor::Format() {
     std::vector<std::string> text;
-    for (UILine* l : Editor::lines) 
+    for (UILine* l : Editor::lines)
         text.push_back(l->getText());
     return text;
 }
 
 Editor::Editor(int w, int h) {
-    viewport = {0,0,w,h};
-    cursorRect = {0,0,1,LineHeight};
+    viewport = { 0,0,w,h };
+    cursorRect = { 0,0,1,LineHeight };
 
     selectionLength = 0;
     lineSelected = false;
@@ -67,15 +67,15 @@ void Editor::render() {
     if (selectionLength != 0) {
         int length = abs(selectionLength);
         UILine* l = lines[Cursor.y];
-        
+
         int x = Cursor.x;
         if (selectionLength > 0) x -= length;
 
         std::string s = l->getText().substr(x, length);
 
-        SDL_Rect selection = {cursorRect.x, cursorRect.y+2, 0, cursorRect.h-2};
+        SDL_Rect selection = { cursorRect.x, cursorRect.y + 2, 0, cursorRect.h - 2 };
 
-        TTF_SizeText(Manager::font, s.c_str(), &selection.w, nullptr); 
+        TTF_SizeText(Manager::font, s.c_str(), &selection.w, nullptr);
         if (selectionLength > 0) selection.x -= selection.w;
 
         Manager::DrawFilledRect(&selection, Window::theme.selection);
@@ -181,7 +181,7 @@ void Editor::deletePreviousChar() {
 
 void Editor::deleteNextChar() {
     if (Cursor.x >= (int)lines[Cursor.y]->size()) return;
-    
+
     lines[Cursor.y]->erase(Cursor.x, 1);
 }
 
@@ -266,8 +266,8 @@ void Editor::insertNewLine() {
         else
             moveCursorRight();
         return;
-    }        
-    else if (selectionLength != 0) 
+    }
+    else if (selectionLength != 0)
         deleteSelection();
 
     std::string text = l->getText();
@@ -277,17 +277,17 @@ void Editor::insertNewLine() {
 
     l->setText(oldLine);
 
-    UILine* nl = new UILine(newLine, Cursor.y+1);
+    UILine* nl = new UILine(newLine, Cursor.y + 1);
     lines.insert(lines.begin() + Cursor.y + 1, nl);
 
-    for (int i = nl->getNumber()+1; i < (int)lines.size(); i++) {
+    for (int i = nl->getNumber() + 1; i < (int)lines.size(); i++) {
         UILine* l = lines[i];
         l->setNumber(i);
     }
 
     moveCursorDown();
     Cursor.x = 0;
-    
+
     updateCursorPlacement();
 }
 
@@ -319,7 +319,7 @@ bool Editor::deleteCurrentLine() {
 bool Editor::deleteNextLine() {
     UILine* l = lines[Cursor.y];
 
-    if (Cursor.x != (int)l->size() || Cursor.y >= (int)lines.size() - 1) 
+    if (Cursor.x != (int)l->size() || Cursor.y >= (int)lines.size() - 1)
         return false;
 
     UILine* lToDelete = lines[Cursor.y + 1];
@@ -327,7 +327,7 @@ bool Editor::deleteNextLine() {
 
     lToDelete->destroy();
     lines.erase(lines.begin() + Cursor.y + 1);
-    
+
     if (!oldLine.empty()) {
         l->append(oldLine);
     }
@@ -350,7 +350,7 @@ void Editor::jumpToFileEnd() {
 void Editor::jumpToLineStart() {
     Cursor.x = 0;
     updateCursorPlacement();
-    
+
     selectionLength = 0;
 }
 
@@ -369,7 +369,7 @@ void Editor::moveCursorUp() {
     Cursor.y--;
     Cursor.x = std::min(Cursor.x, static_cast<int>(lines[Cursor.y]->size()));
 
-    if (Cursor.y  < scrollPosition) {
+    if (Cursor.y < scrollPosition) {
         scroll(-1);
     }
 
@@ -377,7 +377,7 @@ void Editor::moveCursorUp() {
 }
 
 bool Editor::moveCursorDown() {
-    if (Cursor.y >= static_cast<int>(lines.size() - 1) ) return false;
+    if (Cursor.y >= static_cast<int>(lines.size() - 1)) return false;
 
     selectionLength = 0;
 
@@ -407,7 +407,7 @@ void Editor::moveCursorLeft() {
 }
 
 void Editor::moveCursorRight() {
-    if (Cursor.x >= (int)lines[Cursor.y]->size() && Cursor.y < (int)lines.size()-1) {
+    if (Cursor.x >= (int)lines[Cursor.y]->size() && Cursor.y < (int)lines.size() - 1) {
         moveCursorDown();
         Cursor.x = 0;
     }
@@ -421,7 +421,7 @@ void Editor::moveCursorRight() {
 void Editor::scroll(int s) {
     scrollPosition += s;
 
-    scrollPosition = std::max(0, std::min(scrollPosition, static_cast<int>(lines.size()-1)));
+    scrollPosition = std::max(0, std::min(scrollPosition, static_cast<int>(lines.size() - 1)));
 }
 
 void Editor::saveCurrent() {
@@ -431,7 +431,7 @@ void Editor::saveCurrent() {
     }
 
     bool success = File::Export(currentFile, Format());
-    
+
     if (success)
         saveConfig();
     else
@@ -440,7 +440,7 @@ void Editor::saveCurrent() {
 
 void Editor::saveNew() {
     char* path = tinyfd_saveFileDialog("Save", currentFile.c_str(), 4, File::Filters, NULL);
-    
+
     fileSaved = File::Export(path, Format());
     if (fileSaved)
         currentFile = path;
@@ -450,12 +450,12 @@ void Editor::saveNew() {
 
 void Editor::load() {
     char* path = tinyfd_openFileDialog("Open", currentFile.c_str(), 4, File::Filters, NULL, 0);
-    
+
     if (path != NULL) {
         lines.clear();
 
         std::vector<std::string> text = File::LoadTXT(path);
-        
+
         for (unsigned int i = 0; i < text.size(); i++) {
             UILine* l = new UILine(text[i], i);
             lines.push_back(l);
@@ -489,7 +489,7 @@ void Editor::setClipboardText() {
 
 void Editor::pasteClipboardText() {
     char* cbt = SDL_GetClipboardText();
-    
+
     UILine* l = lines[Cursor.y];
     l->insert(Cursor.x, cbt);
 
@@ -504,7 +504,7 @@ void Editor::newFile(bool checkIfSaved) {
     if (checkIfSaved && !fileSaved) {
         std::cout << "file not save !!!!" << std::endl;
         int uinput = tinyfd_messageBox("Title", "File not saved!\nDo you want to save?", "yesnocancel", "warning", 0);
-        
+
         if (uinput == 0) {
             return;
         }
@@ -535,7 +535,7 @@ void Editor::loadConfig() {
     }
 
     std::vector<std::string> text = File::LoadTXT(currentFile);
-    
+
     LeftMargin = config["editor left margin"];
     Manager::SetFontSize(config["font size"]);
     LineHeight = config["line height"];
@@ -580,7 +580,7 @@ void Editor::saveConfig(char* path) {
 
     if (path != NULL)
         config["last file"] = path;
-    
+
     config["cursor x"] = Cursor.x;
     config["cursor y"] = Cursor.y;
     config["scroll position"] = scrollPosition;

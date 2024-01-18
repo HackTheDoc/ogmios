@@ -71,89 +71,89 @@ bool Event::mouseClickRight() {
 }
 
 void Event::handleTextEditorEvents(SDL_Keycode key) {
-        switch (key) {
-        case SDLK_UP:
-            if (SDL_GetModState() & KMOD_CTRL)
-                o->editor->scroll(-1);
+    switch (key) {
+    case SDLK_UP:
+        if (SDL_GetModState() & KMOD_CTRL)
+            o->editor->scroll(-1);
+        else
+            o->editor->moveCursorUp();
+        break;
+    case SDLK_DOWN:
+        if (SDL_GetModState() & KMOD_CTRL)
+            o->editor->scroll(1);
+        else
+            o->editor->moveCursorDown();
+        break;
+    case SDLK_LEFT:
+        if (SDL_GetModState() & KMOD_CTRL)
+            o->editor->select(-1);
+        else
+            o->editor->moveCursorLeft();
+        break;
+    case SDLK_RIGHT:
+        if (SDL_GetModState() & KMOD_CTRL)
+            o->editor->select(+1);
+        else
+            o->editor->moveCursorRight();
+        break;
+    case SDLK_HOME:
+        o->editor->jumpToLineStart();
+        break;
+    case SDLK_END:
+        o->editor->jumpToLineEnd();
+        break;
+    case SDLK_PAGEUP:
+        o->editor->jumpToFileStart();
+        break;
+    case SDLK_PAGEDOWN:
+        o->editor->jumpToFileEnd();
+        break;
+    case SDLK_BACKSPACE:        // SUPPR (selection, current line, previous char)
+        if (!o->editor->deleteSelection())
+            if (!o->editor->deleteCurrentLine())
+                o->editor->deletePreviousChar();
+        break;
+    case SDLK_DELETE:           // DELETE (next line, next char)
+        if (!o->editor->deleteNextLine()) {
+            o->editor->deleteNextChar();
+        }
+        break;
+    case SDLK_RETURN:           // NEW LINE
+        o->editor->insertNewLine();
+        break;
+    case SDLK_TAB:
+        o->editor->insertTab(); // INSERT TAB (NOT WORKING)
+        break;
+    case SDLK_c:                // COPY
+        if (SDL_GetModState() & KMOD_CTRL)
+            o->editor->setClipboardText();
+        break;
+    case SDLK_v:                // PASTE
+        if (SDL_GetModState() & KMOD_CTRL)
+            o->editor->pasteClipboardText();
+        break;
+    case SDLK_s:                // SAVE
+        if (SDL_GetModState() & KMOD_CTRL) {
+            if (SDL_GetModState() & KMOD_SHIFT)
+                o->editor->saveNew();
             else
-                o->editor->moveCursorUp();
-            break;
-        case SDLK_DOWN:
-            if (SDL_GetModState() & KMOD_CTRL)
-                o->editor->scroll(1);
-            else
-                o->editor->moveCursorDown();
-            break;
-        case SDLK_LEFT:
-            if (SDL_GetModState() & KMOD_CTRL)
-                o->editor->select(-1);
-            else 
-                o->editor->moveCursorLeft();
-            break;
-        case SDLK_RIGHT:
-            if (SDL_GetModState() & KMOD_CTRL)
-                o->editor->select(+1);
-            else 
-                o->editor->moveCursorRight();
-            break;
-        case SDLK_HOME:
-            o->editor->jumpToLineStart();
-            break;
-        case SDLK_END:
-            o->editor->jumpToLineEnd();
-            break;
-        case SDLK_PAGEUP:
-            o->editor->jumpToFileStart();
-            break;
-        case SDLK_PAGEDOWN:
-            o->editor->jumpToFileEnd();
-            break;   
-        case SDLK_BACKSPACE:        // SUPPR (selection, current line, previous char)
-            if (!o->editor->deleteSelection())
-                if (!o->editor->deleteCurrentLine())
-                    o->editor->deletePreviousChar();
-            break;
-        case SDLK_DELETE:           // DELETE (next line, next char)
-            if (!o->editor->deleteNextLine()) {
-                o->editor->deleteNextChar();
-            }
-            break;
-        case SDLK_RETURN:           // NEW LINE
-            o->editor->insertNewLine();
-            break;
-        case SDLK_TAB:
-            o->editor->insertTab(); // INSERT TAB (NOT WORKING)
-            break;
-        case SDLK_c:                // COPY
-            if (SDL_GetModState() & KMOD_CTRL)
-                o->editor->setClipboardText();
-            break;
-        case SDLK_v:                // PASTE
-            if (SDL_GetModState() & KMOD_CTRL)
-                o->editor->pasteClipboardText();
-            break;
-        case SDLK_s:                // SAVE
-            if (SDL_GetModState() & KMOD_CTRL) {
-                if (SDL_GetModState() & KMOD_SHIFT)
-                    o->editor->saveNew();
-                else
-                    o->editor->saveCurrent();
-            }
-            break;
-        case SDLK_o:                // OPEN
-            if (SDL_GetModState() & KMOD_CTRL)
-                o->editor->load();
-            break;
-        case SDLK_n:                // NEW FILE
-            if (SDL_GetModState() & KMOD_CTRL)
-                o->editor->newFile();
-            break;
-        case SDLK_l:                // SELECT LINE
-            if (SDL_GetModState() & KMOD_CTRL)
-                o->editor->selectLine();
-            break;
-        default:
-            break;
+                o->editor->saveCurrent();
+        }
+        break;
+    case SDLK_o:                // OPEN
+        if (SDL_GetModState() & KMOD_CTRL)
+            o->editor->load();
+        break;
+    case SDLK_n:                // NEW FILE
+        if (SDL_GetModState() & KMOD_CTRL)
+            o->editor->newFile();
+        break;
+    case SDLK_l:                // SELECT LINE
+        if (SDL_GetModState() & KMOD_CTRL)
+            o->editor->selectLine();
+        break;
+    default:
+        break;
     }
 }
 

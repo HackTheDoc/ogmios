@@ -4,7 +4,7 @@
 
 UILabel::UILabel(std::string text) {
     texture = Manager::GenerateText(text.c_str(), Window::theme.font);
-    rect = {0,0,0,0};
+    rect = { 0,0,0,0 };
     SDL_QueryTexture(texture, NULL, NULL, &rect.w, &rect.h);
 }
 

@@ -3,8 +3,8 @@
 #include "include/Window.h"
 
 UI::UI(int w, int h) {
-    viewport = {0,0,w,h};
-    border = {0,h-1,w,1};
+    viewport = { 0,0,w,h };
+    border = { 0,h - 1,w,1 };
 
     saveButton = nullptr;
     loadButton = nullptr;
@@ -32,25 +32,25 @@ void UI::init() {
         saveButton->x() + saveButton->width() + UIElement::span,
         UIElement::span
     );
-    
+
     minusSizeButton = new UIButton(UIButton::ID::MINUS_SIZE);
     minusSizeButton->place(
         loadButton->x() + loadButton->width() + UIElement::span,
         UIElement::span
     );
-    
+
     sizeButton = new UIButton(UIButton::ID::DEFAULT_SIZE);
     sizeButton->place(
         minusSizeButton->x() + minusSizeButton->width() + UIElement::span,
         UIElement::span
     );
-    
+
     plusSizeButton = new UIButton(UIButton::ID::PLUS_SIZE);
     plusSizeButton->place(
         sizeButton->x() + sizeButton->width() + UIElement::span,
         UIElement::span
     );
-    
+
     themeButton = new UIButton(UIButton::ID::THEME_ICON);
     themeButton->place(
         Window::screen.w - themeButton->width() - UIElement::span,
@@ -77,7 +77,7 @@ void UI::update() {
 
 void UI::render() {
     Manager::DrawFilledRect(&viewport, Window::theme.uiBackground);
-    
+
     Manager::SetViewport(&viewport);
 
     saveButton->draw();

@@ -7,15 +7,15 @@
 #include <iostream>
 
 UILine::UILine(std::string text, int n) {
-    rect = {0,0,Window::screen.w, Editor::LineHeight};
-    
+    rect = { 0,0,Window::screen.w, Editor::LineHeight };
+
     this->text = "";
     texture = nullptr;
-    textureRect = {0,0,0,0};
+    textureRect = { 0,0,0,0 };
 
     this->n = 0;
     number = nullptr;
-    numberRect = {2,0,0,0};
+    numberRect = { 2,0,0,0 };
 
     setNumber(n);
     setText(text);
@@ -26,7 +26,7 @@ UILine::~UILine() {}
 void UILine::draw() {
     Manager::Draw(number, nullptr, &numberRect);
 
-    SDL_Rect l = {Editor::LeftMargin - 2, numberRect.y+1, 1, numberRect.h-1};
+    SDL_Rect l = { Editor::LeftMargin - 2, numberRect.y + 1, 1, numberRect.h - 1 };
     Manager::DrawRect(&l, Window::theme.ui2);
 
     if (!text.empty())
@@ -36,7 +36,7 @@ void UILine::draw() {
 void UILine::update() {
     numberRect.y = n * Editor::LineHeight + 2;
     numberRect.x = (Editor::LeftMargin - numberRect.w) / 2;
-    
+
     textureRect.x = Editor::LeftMargin;
     textureRect.y = numberRect.y;
 }
@@ -66,7 +66,7 @@ void UILine::setText(std::string text) {
 void UILine::setNumber(int n) {
     this->n = n;
 
-    number = Manager::GenerateText(std::to_string(n+1).c_str(), Window::theme.font);
+    number = Manager::GenerateText(std::to_string(n + 1).c_str(), Window::theme.font);
     SDL_QueryTexture(number, NULL, NULL, &numberRect.w, &numberRect.h);
 
     if (numberRect.w > Editor::LeftMargin)
@@ -92,7 +92,7 @@ void UILine::insert(int p, char* c) {
 }
 
 void UILine::erase(int p, int l) {
-    text.erase(p,l);
+    text.erase(p, l);
     setText(text);
 }
 

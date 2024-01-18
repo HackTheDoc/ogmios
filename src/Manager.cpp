@@ -19,9 +19,9 @@ void Manager::SetViewport(SDL_Rect* viewport) {
 SDL_Color Manager::SetRenderDrawColor(int r, int g, int b, int a) {
     SDL_Color old;
     SDL_GetRenderDrawColor(Window::renderer, &old.r, &old.g, &old.b, &old.a);
-    
+
     SDL_SetRenderDrawColor(Window::renderer, r, g, b, a);
-    
+
     return old;
 }
 
@@ -29,13 +29,13 @@ SDL_Color Manager::SetRenderDrawColor(SDL_Color c) {
     return SetRenderDrawColor(c.r, c.g, c.b, c.a);
 }
 
-/* ----- TEXTURE MANAGER ----- */ 
+/* ----- TEXTURE MANAGER ----- */
 
 SDL_Texture* Manager::LoadTexture(const char* filepath) {
     SDL_Surface* tmpSurface = IMG_Load(filepath);
     SDL_Texture* texture = SDL_CreateTextureFromSurface(Window::renderer, tmpSurface);
     SDL_FreeSurface(tmpSurface);
-    
+
 
     return texture;
 }
@@ -86,8 +86,8 @@ void Manager::DrawBorder(SDL_Rect* rect, SDL_Color color) {
         SDL_Rect r = {
             rect->x - i,
             rect->y - i,
-            rect->w + 2*i,
-            rect->h + 2*i
+            rect->w + 2 * i,
+            rect->h + 2 * i
         };
         SDL_RenderDrawRect(Window::renderer, &r);
     }
@@ -99,7 +99,7 @@ void Manager::DrawBorder(SDL_Rect* rect, SDL_Color color) {
 void Manager::OpenFont(const char* filepath) {
     font = TTF_OpenFont(filepath, DEFAULT_FONT_SIZE);
     Window::theme.fontSize = DEFAULT_FONT_SIZE;
-} 
+}
 
 void Manager::SetFontSize(int size) {
     TTF_SetFontSize(font, size);

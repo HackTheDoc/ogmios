@@ -7,7 +7,7 @@ const int UIButton::WIDTH = 50;
 UIButton::UIButton(UIButton::ID id) {
     this->id = id;
 
-    rect = {0,0,UIButton::WIDTH, 2*Window::ui->height()/3};
+    rect = { 0,0,UIButton::WIDTH, 2 * Window::ui->height() / 3 };
 
     switch (id) {
     case UIButton::ID::SAVE:
@@ -36,10 +36,10 @@ UIButton::UIButton(UIButton::ID id) {
         break;
     }
 
-    textRect = {0,0,0,0};
+    textRect = { 0,0,0,0 };
     SDL_QueryTexture(texture, NULL, NULL, &textRect.w, &textRect.h);
 
-    place(0,0);
+    place(0, 0);
 }
 
 UIButton::~UIButton() {}
@@ -69,6 +69,6 @@ void UIButton::place(int x, int y) {
     rect.x = x;
     rect.y = y;
 
-    textRect.x = x + (rect.w - textRect.w)/2;
-    textRect.y = y + (rect.h - textRect.h)/2;
+    textRect.x = x + (rect.w - textRect.w) / 2;
+    textRect.y = y + (rect.h - textRect.h) / 2;
 }

@@ -37,7 +37,7 @@ private:
     std::string text;
     SDL_Texture* texture;
     SDL_Rect textureRect;
-    
+
     int n;
     SDL_Texture* number;
     SDL_Rect numberRect;

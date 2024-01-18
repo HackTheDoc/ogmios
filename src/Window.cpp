@@ -10,7 +10,7 @@ const std::string Window::TITLE = "Ogmios";
 
 bool Window::isRunning = false;
 SDL_Renderer* Window::renderer = nullptr;
-SDL_Rect Window::screen = {0, 0, Window::DEFAULT_WIDTH, Window::DEFAULT_HEIGHT};
+SDL_Rect Window::screen = { 0, 0, Window::DEFAULT_WIDTH, Window::DEFAULT_HEIGHT };
 Manager Window::manager;
 Event Window::event;
 Theme Window::theme;
@@ -51,15 +51,15 @@ int Window::init() {
         return -3;
     }
     SDL_SetWindowMinimumSize(window, Window::MIN_WIDTH, Window::MIN_HEIGHT);
-/*
-    SDL_Surface* icon = IMG_Load("icons/Ogmios.png");
-    SDL_SetWindowIcon(window, icon);*/
+    /*
+        SDL_Surface* icon = IMG_Load("icons/Ogmios.png");
+        SDL_SetWindowIcon(window, icon);*/
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
         std::cout << "error creating the renderer" << std::endl;
         return -4;
-    }  
+    }
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
     event.linkTo(this);
@@ -70,11 +70,11 @@ int Window::init() {
 
     ui = new UI(screen.w, 30);
     ui->init();
-    ui->place(0,0);
+    ui->place(0, 0);
 
     editor = new Editor(screen.w, screen.h - ui->height());
     editor->init();
-    editor->place(0,ui->height());
+    editor->place(0, ui->height());
 
     Manager::SetRenderDrawColor(theme.textBackground);
 
@@ -143,7 +143,7 @@ void Window::switchTheme() {
 void Window::resize(int w, int h) {
     screen.w = w;
     screen.h = h;
-    
+
     ui->setWidth(w);
     editor->setWidth(w);
 }

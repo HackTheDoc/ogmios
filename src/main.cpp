@@ -5,7 +5,7 @@
 
 Window window;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     if (window.init() < 0) return -1;
 
     while (Window::isRunning) {

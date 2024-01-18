@@ -12,7 +12,7 @@ const char* File::Filters[4] = {
     "*.markdown"
 };
 
-const std::vector<char> File::MardkdownFlags = {'#'};
+const std::vector<char> File::MardkdownFlags = { '#' };
 
 /* ----- IMPORT FUNCTIONS ----- */
 std::vector<std::string> File::LoadTXT(fs::path path) {
@@ -21,7 +21,7 @@ std::vector<std::string> File::LoadTXT(fs::path path) {
     std::ifstream infile(path);
 
     std::string l;
-    while(getline(infile, l))
+    while (getline(infile, l))
         text.push_back(l);
 
     infile.close();
@@ -39,13 +39,13 @@ bool File::Export(fs::path path, std::vector<std::string> text) {
         return ExportToMD(path, text);
     if (extension == ".pdf")
         return ExportToPDF(path, text);
-    
+
     return false;
 }
 
 bool File::ExportToTXT(fs::path path, std::vector<std::string> text) {
     std::ofstream outfile(path);
-    
+
     for (auto l : text) {
         outfile << l << std::endl;
     }
@@ -61,9 +61,9 @@ bool File::ExportToMD(fs::path path, std::vector<std::string> text) {
         outfile << l << std::endl;
 
         if (std::find(MardkdownFlags.begin(), MardkdownFlags.end(), l[0]) != MardkdownFlags.end());
-            outfile << std::endl;
+        outfile << std::endl;
     }
-    
+
     outfile.close();
 
     return true;

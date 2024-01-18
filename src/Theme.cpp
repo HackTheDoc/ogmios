@@ -10,12 +10,12 @@
 Theme::Theme() {
     next = Theme::Type::DAY;
 
-    font = {255,255,255,255};
-    cursor = {255,255,255,255};
-    ui = {255,255,255,255};
-    ui2 = {255,255,255,255};
-    uiBackground = {0,0,0,255};
-    textBackground = {0,0,0,255};
+    font = { 255,255,255,255 };
+    cursor = { 255,255,255,255 };
+    ui = { 255,255,255,255 };
+    ui2 = { 255,255,255,255 };
+    uiBackground = { 0,0,0,255 };
+    textBackground = { 0,0,0,255 };
 
     icon = "";
 
