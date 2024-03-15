@@ -1,20 +1,17 @@
-#include <iostream>
-#include <SDL2/SDL.h>
-
 #include "include/Window.h"
 
-Window window;
+Window w;
 
-int main(int argc, char* argv[]) {
-    if (window.init() < 0) return -1;
+int main(int argc, char const *argv[]) {
+    if (w.init() < 0) exit(EXIT_FAILURE);
 
     while (Window::isRunning) {
-        window.handleEvents();
-        window.update();
-        window.render();
+        w.handleEvents();
+        w.update();
+        w.render();
     }
 
-    window.kill();
+    w.kill();
 
-    return 0;
+    exit(EXIT_SUCCESS);
 }

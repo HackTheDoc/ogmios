@@ -1,89 +1,68 @@
 #include "include/Theme.h"
 
-#include "include/Manager.h"
-
 #include <nlohmann/json.hpp>
 #include <fstream>
 
-#include <iostream>
+using json = nlohmann::json;
 
-Theme::Theme() {
-    next = Theme::Type::DAY;
+std::string Theme::name = "unknown";
 
-    font = { 255,255,255,255 };
-    cursor = { 255,255,255,255 };
-    ui = { 255,255,255,255 };
-    ui2 = { 255,255,255,255 };
-    uiBackground = { 0,0,0,255 };
-    textBackground = { 0,0,0,255 };
+SDL_Color Theme::clr_font = { 255, 255, 255, 255 };
+SDL_Color Theme::clr_cursor = { 255, 255, 255, 255 };
+SDL_Color Theme::clr_ui = { 255, 255, 255, 255 };
+SDL_Color Theme::clr_ui_background = { 0, 0, 0, 255 };
+SDL_Color Theme::clr_editor_background = { 0, 0, 0, 255 };
+SDL_Color Theme::clr_selection = { 255, 0, 0, 255 };
 
-    icon = "";
+std::string Theme::icon = "";
 
-    fontSize = 0;
-}
+void Theme::load(const std::string& name) {
+    if (name == Theme::name) return;
 
-Theme::~Theme() {}
+    Theme::name = name;
 
-void Theme::load(Theme::Type t) {
-    std::string filepath = "./themes/";
-    switch (t) {
-    case Theme::Type::NIGHT:
-        filepath += "night.json";
-        next = Theme::Type::DAY;
-        break;
-    case Theme::Type::DAY:
-    default:
-        filepath += "day.json";
-        next = Theme::Type::NIGHT;
-        break;
-    }
-
-    std::fstream infile(filepath);
-    nlohmann::json data;
-    infile >> data;
+    std::fstream infile("./themes.json");
+    json rdata;
+    infile >> rdata;
     infile.close();
 
+    json data = rdata[name];
+
     auto fc = data["font color"];
-    font.r = fc[0];
-    font.g = fc[1];
-    font.b = fc[2];
-    font.a = fc[3];
+    clr_font.r = fc[0];
+    clr_font.g = fc[1];
+    clr_font.b = fc[2];
+    clr_font.a = fc[3];
 
     auto cc = data["cursor color"];
-    cursor.r = cc[0];
-    cursor.g = cc[1];
-    cursor.b = cc[2];
-    cursor.a = cc[3];
+    clr_cursor.r = cc[0];
+    clr_cursor.g = cc[1];
+    clr_cursor.b = cc[2];
+    clr_cursor.a = cc[3];
 
     auto uc = data["ui color"];
-    ui.r = uc[0];
-    ui.g = uc[1];
-    ui.b = uc[2];
-    ui.a = uc[3];
-
-    auto u2c = data["ui2 color"];
-    ui2.r = u2c[0];
-    ui2.g = u2c[1];
-    ui2.b = u2c[2];
-    ui2.a = u2c[3];
+    clr_ui.r = uc[0];
+    clr_ui.g = uc[1];
+    clr_ui.b = uc[2];
+    clr_ui.a = uc[3];
 
     auto ubc = data["ui background color"];
-    uiBackground.r = ubc[0];
-    uiBackground.g = ubc[1];
-    uiBackground.b = ubc[2];
-    uiBackground.a = ubc[3];
+    clr_ui_background.r = ubc[0];
+    clr_ui_background.g = ubc[1];
+    clr_ui_background.b = ubc[2];
+    clr_ui_background.a = ubc[3];
 
-    auto tbc = data["text background color"];
-    textBackground.r = tbc[0];
-    textBackground.g = tbc[1];
-    textBackground.b = tbc[2];
-    textBackground.a = tbc[3];
+    auto tbc = data["editor background color"];
+    clr_editor_background.r = tbc[0];
+    clr_editor_background.g = tbc[1];
+    clr_editor_background.b = tbc[2];
+    clr_editor_background.a = tbc[3];
 
     auto sc = data["selection highlighting color"];
-    selection.r = sc[0];
-    selection.g = sc[1];
-    selection.b = sc[2];
-    selection.a = sc[3];
+    clr_selection.r = sc[0];
+    clr_selection.g = sc[1];
+    clr_selection.b = sc[2];
+    clr_selection.a = sc[3];
 
-    icon = data["icon"];
+    icon = data["icon path"];
 }

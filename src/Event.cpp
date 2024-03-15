@@ -1,62 +1,31 @@
 #include "include/Event.h"
 
 #include "include/Window.h"
+#include "include/Config.h"
 
-Event::Event() : o(nullptr) {}
+Event::Event() : w(nullptr) {}
 
 Event::~Event() {}
+
+void Event::linkTo(Window* w) {
+    this->w = w;
+}
 
 void Event::handleKeyboardInputs() {
     switch (e.type) {
     case SDL_WINDOWEVENT:
         if (e.window.event == SDL_WINDOWEVENT_RESIZED)
-            o->resize(e.window.data1, e.window.data2);
+            w->resize(e.window.data1, e.window.data2);
         break;
     case SDL_TEXTINPUT:
         Window::editor->insertChar(*e.text.text);
         break;
     case SDL_KEYDOWN:
-        handleTextEditorEvents(e.key.keysym.sym);
+        handleTextEditorEvents();
         break;
     case SDL_MOUSEBUTTONUP:
         handleMouseEvents();
         break;
-    default:
-        break;
-    }
-}
-
-void Event::linkTo(Window* w) {
-    o = w;
-}
-
-void Event::handleButtonClick(UIButton::ID id) {
-    switch (id) {
-    case UIButton::ID::SAVE:
-        o->editor->saveCurrent();
-        break;
-    case UIButton::ID::LOAD:
-        o->editor->load();
-        break;
-    case UIButton::ID::MINUS_SIZE:
-        if (SDL_GetModState() & KMOD_CTRL)
-            o->editor->updateFontSize(Manager::MIN_FONT_SIZE - Window::theme.fontSize);
-        else
-            o->editor->updateFontSize(-2);
-        break;
-    case UIButton::ID::DEFAULT_SIZE:
-        o->editor->resetFontSize();
-        break;
-    case UIButton::ID::PLUS_SIZE:
-        if (SDL_GetModState() & KMOD_CTRL)
-            o->editor->updateFontSize(Manager::MAX_FONT_SIZE - Window::theme.fontSize);
-        else
-            o->editor->updateFontSize(2);
-        break;
-    case UIButton::ID::THEME_ICON:
-        o->switchTheme();
-        break;
-    case UIButton::ID::UNKNOWN:
     default:
         break;
     }
@@ -70,87 +39,118 @@ bool Event::mouseClickRight() {
     return e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_RIGHT;
 }
 
-void Event::handleTextEditorEvents(SDL_Keycode key) {
-    switch (key) {
-    case SDLK_UP:
-        if (SDL_GetModState() & KMOD_CTRL)
-            o->editor->scroll(-1);
+bool Event::controlKeyClicked() {
+    return SDL_GetModState() & KMOD_CTRL;
+}
+
+void Event::raise(const Event::ID eid) {
+    switch (eid) {
+    case ID::SAVE:
+        Window::editor->save();
+        break;
+    case ID::LOAD:
+        Window::editor->load();
+        break;
+    case ID::MINUS_FONT_SIZE:
+        if (controlKeyClicked())
+            Window::editor->updateFontSize(Config::FONT_MIN_SIZE - Config::fontSize);
         else
-            o->editor->moveCursorUp();
+            Window::editor->updateFontSize(-2);
+        break;
+    case ID::PLUS_FONT_SIZE:
+        if (controlKeyClicked())
+            Window::editor->updateFontSize(Config::FONT_MAX_SIZE - Config::fontSize);
+        else
+            Window::editor->updateFontSize(2);
+        break;
+    case ID::DEFAULT_FONT_SIZE:
+        Window::editor->resetFontSize();
+        break;
+    case ID::CHANGE_THEME:
+        w->switchTheme();
+        break;
+    case ID::UNKNOWN:
+    default:
+        break;
+    }
+}
+
+void Event::handleTextEditorEvents() {
+    switch (e.key.keysym.sym) {
+    case SDLK_UP:
+        if (controlKeyClicked())
+            Window::editor->scroll(-1);
+        else
+            Window::editor->moveCursorUp();
         break;
     case SDLK_DOWN:
-        if (SDL_GetModState() & KMOD_CTRL)
-            o->editor->scroll(1);
+        if (controlKeyClicked())
+            Window::editor->scroll(1);
         else
-            o->editor->moveCursorDown();
+            Window::editor->moveCursorDown();
         break;
     case SDLK_LEFT:
-        if (SDL_GetModState() & KMOD_CTRL)
-            o->editor->select(-1);
+        if (controlKeyClicked())
+            Window::editor->select(-1);
         else
-            o->editor->moveCursorLeft();
+            Window::editor->moveCursorLeft();
         break;
     case SDLK_RIGHT:
-        if (SDL_GetModState() & KMOD_CTRL)
-            o->editor->select(+1);
+        if (controlKeyClicked())
+            Window::editor->select(1);
         else
-            o->editor->moveCursorRight();
+            Window::editor->moveCursorRight();
         break;
     case SDLK_HOME:
-        o->editor->jumpToLineStart();
+        Window::editor->jumpToLineStart();
         break;
     case SDLK_END:
-        o->editor->jumpToLineEnd();
+        Window::editor->jumpToLineEnd();
         break;
     case SDLK_PAGEUP:
-        o->editor->jumpToFileStart();
+        Window::editor->jumpToFileStart();
         break;
     case SDLK_PAGEDOWN:
-        o->editor->jumpToFileEnd();
+        Window::editor->jumpToFileEnd();
         break;
-    case SDLK_BACKSPACE:        // SUPPR (selection, current line, previous char)
-        if (!o->editor->deleteSelection())
-            if (!o->editor->deleteCurrentLine())
-                o->editor->deletePreviousChar();
+    case SDLK_BACKSPACE:
+        if (!Window::editor->deleteSelection())
+            if (!Window::editor->deleteCurrentLine())
+                Window::editor->deletePreviousChar();
         break;
-    case SDLK_DELETE:           // DELETE (next line, next char)
-        if (!o->editor->deleteNextLine()) {
-            o->editor->deleteNextChar();
-        }
+    case SDLK_DELETE:
+        if (!Window::editor->deleteNextLine())
+            Window::editor->deleteNextChar();
         break;
-    case SDLK_RETURN:           // NEW LINE
-        o->editor->insertNewLine();
+    case SDLK_RETURN:   // NEW LINE
+        Window::editor->insertNewLine();
+    case SDLK_c:        // CTRL C
+        if (controlKeyClicked())
+            Window::editor->setClipboardText();
         break;
-    case SDLK_TAB:
-        o->editor->insertTab(); // INSERT TAB (NOT WORKING)
+    case SDLK_v:        // CTRL V
+        if (controlKeyClicked())
+            Window::editor->pasteClipboardText();
         break;
-    case SDLK_c:                // COPY
-        if (SDL_GetModState() & KMOD_CTRL)
-            o->editor->setClipboardText();
-        break;
-    case SDLK_v:                // PASTE
-        if (SDL_GetModState() & KMOD_CTRL)
-            o->editor->pasteClipboardText();
-        break;
-    case SDLK_s:                // SAVE
-        if (SDL_GetModState() & KMOD_CTRL) {
+    case SDLK_s:        // CTRL S
+        if (controlKeyClicked()) {
             if (SDL_GetModState() & KMOD_SHIFT)
-                o->editor->saveNew();
+                Window::editor->save(true);
             else
-                o->editor->saveCurrent();
+                Window::editor->save();
         }
         break;
-    case SDLK_o:                // OPEN
-        if (SDL_GetModState() & KMOD_CTRL)
-            o->editor->load();
+    case SDLK_o:        // CTRL O
+        if (controlKeyClicked())
+            Window::editor->load();
         break;
-    case SDLK_n:                // NEW FILE
-        if (SDL_GetModState() & KMOD_CTRL)
-            o->editor->newFile();
+    case SDLK_n:        // CTRL N
+        if (controlKeyClicked())
+            Window::editor->createNewFile();
         break;
-    case SDLK_l:                // SELECT LINE
-        if (SDL_GetModState() & KMOD_CTRL)
-            o->editor->selectLine();
+    case SDLK_l:        // CTRL L
+        if (controlKeyClicked())
+            Window::editor->selectLine();
         break;
     default:
         break;
@@ -158,5 +158,5 @@ void Event::handleTextEditorEvents(SDL_Keycode key) {
 }
 
 void Event::handleMouseEvents() {
-
+    // none
 }

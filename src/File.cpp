@@ -1,76 +1,43 @@
 #include "include/File.h"
 
 #include <algorithm>
-#include <fstream>
 #include <iostream>
+#include <fstream>
 
-const char* File::Filters[4] = {
+const char* File::FILTERS[4] = {
     "*.txt",
-    "*.text",
-
-    "*.md",
-    "*.markdown"
+    "*.text"
 };
 
-const std::vector<char> File::MardkdownFlags = { '#' };
+/* ----- IMPORT ----- */
 
-/* ----- IMPORT FUNCTIONS ----- */
-std::vector<std::string> File::LoadTXT(fs::path path) {
-    std::vector<std::string> text;
+std::vector<std::string> File::LoadTXT(const fs::path& path) {
+    std::vector<std::string> buf;
 
-    std::ifstream infile(path);
+    {
+        std::ifstream infile(path);
 
-    std::string l;
-    while (getline(infile, l))
-        text.push_back(l);
-
-    infile.close();
-
-    return text;
-}
-
-/* ----- EXPORT FUNCTIONS ----- */
-bool File::Export(fs::path path, std::vector<std::string> text) {
-    std::string extension = path.extension();
-
-    if (extension == ".txt" || extension == ".text")
-        return ExportToTXT(path, text);
-    if (extension == ".md" || extension == ".markdown")
-        return ExportToMD(path, text);
-    if (extension == ".pdf")
-        return ExportToPDF(path, text);
-
-    return false;
-}
-
-bool File::ExportToTXT(fs::path path, std::vector<std::string> text) {
-    std::ofstream outfile(path);
-
-    for (auto l : text) {
-        outfile << l << std::endl;
-    }
-    outfile.close();
-
-    return true;
-}
-
-bool File::ExportToMD(fs::path path, std::vector<std::string> text) {
-    std::ofstream outfile(path);
-
-    for (auto l : text) {
-        outfile << l << std::endl;
-
-        if (std::find(MardkdownFlags.begin(), MardkdownFlags.end(), l[0]) != MardkdownFlags.end());
-        outfile << std::endl;
+        std::string l;
+        while (getline(infile, l))
+            buf.push_back(l);
     }
 
-    outfile.close();
-
-    return true;
+    return buf;
 }
 
-bool File::ExportToPDF(fs::path path, std::vector<std::string> text) {
-    ExportToTXT(path, text);
+/* ----- EXPORT ----- */
+
+bool File::Export(const fs::path& path, const std::vector<std::string>& text) {
+    return ExportToTXT(path, text);
+}
+
+bool File::ExportToTXT(const fs::path& path, const std::vector<std::string>& text) {
+    std::ofstream outfile(path);
+
+    for (const auto& l : text)
+        outfile << l << std::endl;
+    
+    outfile.close();
 
     return true;
 }

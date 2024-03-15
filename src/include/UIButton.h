@@ -1,24 +1,16 @@
 #pragma once
 
-#include <string>
-
+#include "Event.h"
 #include "UIElement.h"
 
 class UIButton : public UIElement {
-public:
-    static const int WIDTH;
-    
-    enum ID {
-        UNKNOWN,
-        SAVE,
-        LOAD,
-        MINUS_SIZE,
-        DEFAULT_SIZE,
-        PLUS_SIZE,
-        THEME_ICON
-    };
+private:
+    Event::ID eid;
+    SDL_Texture* text;
+    SDL_Rect textRect;
 
-    UIButton(UIButton::ID id);
+public:
+    UIButton(const Event::ID eid);
     ~UIButton();
 
     void place(int x, int y);
@@ -26,9 +18,4 @@ public:
     void draw() override;
     void update() override;
     void destroy() override;
-
-private:
-    UIButton::ID id;
-    SDL_Texture* texture;
-    SDL_Rect textRect;
 };

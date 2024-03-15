@@ -3,29 +3,18 @@
 #include <string>
 #include <SDL2/SDL.h>
 
-class Theme {
+struct Theme {
 public:
-    enum Type {
-        DAY,
-        NIGHT
-    };
+    static std::string name;
 
-    Type next;
+    static SDL_Color clr_font;
+    static SDL_Color clr_cursor;
+    static SDL_Color clr_ui;
+    static SDL_Color clr_ui_background;
+    static SDL_Color clr_editor_background;
+    static SDL_Color clr_selection;
 
-    SDL_Color font;
-    SDL_Color cursor;
-    SDL_Color ui;
-    SDL_Color ui2;
-    SDL_Color uiBackground;
-    SDL_Color textBackground;
-    SDL_Color selection;
+    static std::string icon;
 
-    std::string icon;
-
-    int fontSize;
-
-    Theme();
-    ~Theme();
-
-    void load(Type t);
+    static void load(const std::string& name);
 };

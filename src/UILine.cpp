@@ -2,101 +2,105 @@
 
 #include "include/Window.h"
 #include "include/Editor.h"
-#include "include/Manager.h"
 
-#include <iostream>
+UILine::UILine(const std::string& t, const int n) {
+    rect = { 0, 0, Window::screen.w, Editor::LineHeight };
 
-UILine::UILine(std::string text, int n) {
-    rect = { 0,0,Window::screen.w, Editor::LineHeight };
+    text = "";
+    lbl_text = new UILabel("");
 
-    this->text = "";
-    texture = nullptr;
-    textureRect = { 0,0,0,0 };
-
-    this->n = 0;
-    number = nullptr;
-    numberRect = { 2,0,0,0 };
+    number = 0;
+    lbl_number = new UILabel("0");
 
     setNumber(n);
-    setText(text);
+    setText(t);
+
+    lbl_number->place(
+        lbl_number->x(),
+        n * Editor::LineHeight + 1
+    );
+
+    lbl_text->place(lbl_text->x(), lbl_number->y());
 }
 
 UILine::~UILine() {}
-
-void UILine::draw() {
-    Manager::Draw(number, nullptr, &numberRect);
-
-    SDL_Rect l = { Editor::LeftMargin - 2, numberRect.y + 1, 1, numberRect.h - 1 };
-    Manager::DrawRect(&l, Window::theme.ui2);
-
-    if (!text.empty())
-        Manager::Draw(texture, nullptr, &textureRect);
-}
-
-void UILine::update() {
-    numberRect.y = n * Editor::LineHeight + 2;
-    numberRect.x = (Editor::LeftMargin - numberRect.w) / 2;
-
-    textureRect.x = Editor::LeftMargin;
-    textureRect.y = numberRect.y;
-}
-
-void UILine::destroy() {
-    SDL_DestroyTexture(texture);
-    texture = nullptr;
-
-    SDL_DestroyTexture(number);
-    number = nullptr;
-}
 
 void UILine::reload() {
     destroy();
     rect.w = Window::screen.w;
     setText(text);
-    setNumber(n);
+    setNumber(number);
 }
 
-void UILine::setText(std::string text) {
-    this->text = text;
-
-    texture = Manager::GenerateText(text.c_str(), Window::theme.font, rect.w);
-    SDL_QueryTexture(texture, NULL, NULL, &textureRect.w, &textureRect.h);
+void UILine::drawAt(int y) {
+    lbl_number->place(lbl_number->x(), y);
+    lbl_text->place(lbl_text->x(), y);
+    draw();
 }
 
-void UILine::setNumber(int n) {
-    this->n = n;
+void UILine::draw() {
+    lbl_number->draw();
 
-    number = Manager::GenerateText(std::to_string(n + 1).c_str(), Window::theme.font);
-    SDL_QueryTexture(number, NULL, NULL, &numberRect.w, &numberRect.h);
+    SDL_Rect l = {
+        Editor::LeftMargin - 2,
+        lbl_number->y() + 1,
+        1,
+        lbl_number->height() - 1
+    };
+    Manager::DrawRect(&l, Theme::clr_ui);
 
-    if (numberRect.w > Editor::LeftMargin)
-        Editor::LeftMargin = numberRect.w + 8;
+    if (!text.empty())
+        lbl_text->draw();
 }
 
-std::string UILine::getText() {
-    return text;
+void UILine::update() {
+    lbl_number->place(
+        (Editor::LeftMargin - lbl_number->width()) / 2,
+        lbl_number->y()
+    );
+
+    lbl_text->place(
+        Editor::LeftMargin,
+        lbl_text->y()
+    );
 }
 
-int UILine::getNumber() {
-    return n;
+void UILine::destroy() {
+    lbl_text->destroy();
+    lbl_number->destroy();
 }
 
-void UILine::insert(int p, char c) {
+void UILine::setText(const std::string& t) {
+    text = t;
+
+    lbl_text->setText(t, rect.w);
+}
+
+void UILine::setNumber(const int n) {
+    number = n;
+
+    lbl_number->setText(std::to_string(n + 1));
+
+    if (lbl_number->width() > Editor::LeftMargin)
+        useAsMargin();
+}
+
+void UILine::insert(const int p, const char c) {
     text.insert(text.begin() + p, 1, c);
     setText(text);
 }
 
-void UILine::insert(int p, char* c) {
+void UILine::insert(const int p, const char* c) {
     text.insert(p, c);
     setText(text);
 }
 
-void UILine::erase(int p, int l) {
+void UILine::erase(const int p, const int l) {
     text.erase(p, l);
     setText(text);
 }
 
-void UILine::append(std::string s) {
+void UILine::append(const std::string& s) {
     text.append(s);
     setText(text);
 }
@@ -109,10 +113,22 @@ void UILine::clear() {
     setText("");
 }
 
+int UILine::y() {
+    return lbl_number->y();
+}
+
 int UILine::height() {
-    return numberRect.h;
+    return std::max(std::max(lbl_number->height(), lbl_text->height()), Editor::LineHeight);
+}
+
+int UILine::getNumber() {
+    return number;
+}
+
+std::string UILine::getText() {
+    return text;
 }
 
 void UILine::useAsMargin() {
-    Editor::LeftMargin = numberRect.w + 8;
+    Editor::LeftMargin = lbl_number->width() + 8;
 }

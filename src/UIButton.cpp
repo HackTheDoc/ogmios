@@ -1,43 +1,42 @@
 #include "include/UIButton.h"
 
 #include "include/Window.h"
+#include "include/Config.h"
 
-const int UIButton::WIDTH = 50;
+UIButton::UIButton(const Event::ID eid) {
+    this->eid = eid;
 
-UIButton::UIButton(UIButton::ID id) {
-    this->id = id;
+    rect = { 0, 0, Config::BUTTON_WIDTH, 2 * Window::ui->height() / 3 };
 
-    rect = { 0,0,UIButton::WIDTH, 2 * Window::ui->height() / 3 };
-
-    switch (id) {
-    case UIButton::ID::SAVE:
-        texture = Manager::GenerateText("Save", Window::theme.ui);
+    switch (eid) {
+    case Event::ID::SAVE:
+        text = Manager::GenerateText("Save", Theme::clr_ui);
         break;
-    case UIButton::ID::LOAD:
-        texture = Manager::GenerateText("Load", Window::theme.ui);
+    case Event::ID::LOAD:
+        text = Manager::GenerateText("Load", Theme::clr_ui);
         break;
-    case UIButton::ID::MINUS_SIZE:
-        texture = Manager::GenerateText("-", Window::theme.ui);
+    case Event::ID::MINUS_FONT_SIZE:
+        text = Manager::GenerateText("-", Theme::clr_ui);
         break;
-    case UIButton::ID::DEFAULT_SIZE:
-        texture = Manager::GenerateText("Size", Window::theme.ui);
+    case Event::ID::DEFAULT_FONT_SIZE:
+        text = Manager::GenerateText("Size", Theme::clr_ui);
         rect.w -= 10;
         break;
-    case UIButton::ID::PLUS_SIZE:
-        texture = Manager::GenerateText("+", Window::theme.ui);
+    case Event::ID::PLUS_FONT_SIZE:
+        text = Manager::GenerateText("+", Theme::clr_ui);
         break;
-    case UIButton::ID::THEME_ICON:
-        texture = Manager::LoadTexture(Window::theme.icon.c_str());
+    case Event::ID::CHANGE_THEME:
+        text = Manager::LoadTexture(Theme::icon);
         rect.w = rect.h;
         break;
-    case UIButton::ID::UNKNOWN:
+    case Event::ID::UNKNOWN:
     default:
-        texture = nullptr;
+        text = nullptr;
         break;
     }
 
     textRect = { 0,0,0,0 };
-    SDL_QueryTexture(texture, NULL, NULL, &textRect.w, &textRect.h);
+    SDL_QueryTexture(text, NULL, NULL, &textRect.w, &textRect.h);
 
     place(0, 0);
 }
@@ -45,24 +44,22 @@ UIButton::UIButton(UIButton::ID id) {
 UIButton::~UIButton() {}
 
 void UIButton::draw() {
-    if (texture == nullptr) return;
+    Manager::Draw(text, nullptr, &textRect);
 
-    Manager::Draw(texture, nullptr, &textRect);
-
-    Manager::DrawRect(&rect, Window::theme.ui);
+    Manager::DrawRect(&rect, Theme::clr_ui);
 }
 
 void UIButton::update() {
-    SDL_Point mouse;
-    SDL_GetMouseState(&mouse.x, &mouse.y);
+    SDL_Point m;
+    SDL_GetMouseState(&m.x, &m.y);
 
-    if (SDL_PointInRect(&mouse, &rect) && Window::event.mouseClickLeft())
-        Window::event.handleButtonClick(id);
+    if (SDL_PointInRect(&m, &rect) && Window::event.mouseClickLeft())
+        Window::event.raise(eid);
 }
 
 void UIButton::destroy() {
-    SDL_DestroyTexture(texture);
-    texture = nullptr;
+    SDL_DestroyTexture(text);
+    text = nullptr;
 }
 
 void UIButton::place(int x, int y) {

@@ -1,19 +1,14 @@
 #include "include/Window.h"
 
 #include <iostream>
+#include <map>
 
-const int Window::MIN_WIDTH = 384;
-const int Window::MIN_HEIGHT = 128;
-const int Window::DEFAULT_WIDTH = 800;
-const int Window::DEFAULT_HEIGHT = 600;
-const std::string Window::TITLE = "Ogmios";
+const std::string Window::Title = "Ogmios Editor";
 
 bool Window::isRunning = false;
 SDL_Renderer* Window::renderer = nullptr;
-SDL_Rect Window::screen = { 0, 0, Window::DEFAULT_WIDTH, Window::DEFAULT_HEIGHT };
-Manager Window::manager;
+SDL_Rect Window::screen = { 0, 0, Config::WINDOW_DEFAULT_WIDTH, Config::WINDOW_DEFAULT_HEIGHT };
 Event Window::event;
-Theme Window::theme;
 
 UI* Window::ui = nullptr;
 Editor* Window::editor = nullptr;
@@ -39,7 +34,7 @@ int Window::init() {
     }
 
     window = SDL_CreateWindow(
-        TITLE.c_str(),
+        Title.c_str(),
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         screen.w,
@@ -50,10 +45,13 @@ int Window::init() {
         std::cerr << "error creating the window" << std::endl;
         return -3;
     }
-    SDL_SetWindowMinimumSize(window, Window::MIN_WIDTH, Window::MIN_HEIGHT);
+    SDL_SetWindowMinimumSize(window, Config::WINDOW_MIN_WIDTH, Config::WINDOW_MIN_HEIGHT);
+
+    /// TODO: add app icon
     /*
-        SDL_Surface* icon = IMG_Load("icons/Ogmios.png");
-        SDL_SetWindowIcon(window, icon);*/
+    SDL_Surface* icon = IMG_Load("icons/Ogmios.png");
+    SDL_SetWindowIcon(window, icon);
+    */
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
@@ -64,19 +62,18 @@ int Window::init() {
 
     event.linkTo(this);
 
-    theme.load(Theme::Type::NIGHT);
-
-    Manager::OpenFont("./fonts/Nunito-Regular.ttf");
+    Manager::OpenFont("fonts/Oxanium-Regular.ttf");
 
     ui = new UI(screen.w, 30);
-    ui->init();
-    ui->place(0, 0);
-
     editor = new Editor(screen.w, screen.h - ui->height());
+
     editor->init();
+    ui->init();
+
+    ui->place(0, 0);
     editor->place(0, ui->height());
 
-    Manager::SetRenderDrawColor(theme.textBackground);
+    Manager::SetRenderDrawColor(Theme::clr_editor_background);
 
     SDL_StartTextInput();
 
@@ -129,15 +126,19 @@ void Window::kill() {
     SDL_DestroyWindow(window);
     window = nullptr;
 
+    SDL_StopTextInput();
     SDL_Quit();
 }
 
 void Window::switchTheme() {
-    theme.load(theme.next);
+    //const std::map<std::string, std::string> next = {{"day", "night"}, {"night", "day"}};
+    //Theme::load(next.at(Theme::name));
+
+    Theme::load((std::map<std::string, std::string>){{"day", "night"}, {"night", "day"}}[Theme::name]);
 
     Reload();
 
-    Manager::SetRenderDrawColor(theme.textBackground);
+    Manager::SetRenderDrawColor(Theme::clr_editor_background);
 }
 
 void Window::resize(int w, int h) {

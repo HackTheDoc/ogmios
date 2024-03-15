@@ -1,15 +1,28 @@
 #pragma once
 
 #include <vector>
-#include <SDL2/SDL.h>
 
 #include "UILine.h"
 
-class Editor {
-public:
-    static const int DEFAULT_LEFT_MARGIN;
-    static const int DEFAULT_LINE_HEIGHT;
+struct Data;
 
+class Editor {
+private:
+    SDL_Rect container;
+    SDL_Rect cursor;
+
+    int selectionLength;
+    bool lineSelected;
+
+    int scrollPosition;
+
+    std::string currentFile; // path to the current file editing
+    bool fileSaved; // represent wether the current file is saved or not
+
+    void saveToNewFile();
+    void saveToCurrentFile();
+
+public:
     static int LeftMargin;
     static int LineHeight;
     static SDL_Point Cursor;
@@ -17,8 +30,11 @@ public:
 
     static std::vector<std::string> Format();
 
-    Editor(int w, int h);
+    Editor(const int w, const int h);
     ~Editor();
+    
+    void importData(const Data& d);
+    Data exportData();
 
     void init();
     void update();
@@ -27,21 +43,21 @@ public:
     void destroy();
     void reload();
 
-    void place(int x, int y);
-    void setWidth(int w);
+    void place(const int x, const int y);
+    void setWidth(const int w);
 
     void updateCursorPlacement();
-    void updateFontSize(int s);
+    void updateFontSize(const int s);
     void resetFontSize();
 
-    void insertChar(char c);
+    void insertChar(const char c);
     void insertTab();
     void deletePreviousChar();
     void deleteNextChar();
     void deletePreviousWord();
     void deleteNextWord();
 
-    void select(int d);
+    void select(const int d);
     void selectLine();
     bool deleteSelection();
 
@@ -63,25 +79,8 @@ public:
     void setClipboardText();
     void pasteClipboardText();
 
-    void saveCurrent();
-    void saveNew();
+    void save(const bool isnew = false);
     void load();
 
-    void newFile(bool checkIfSaved = true);
-
-private:
-    SDL_Rect viewport;
-    SDL_Rect cursorRect;
-
-    int selectionLength;
-    bool lineSelected;
-
-    int scrollPosition;
-
-    std::string currentFile;
-    bool fileSaved;
-
-    void loadConfig();
-    void createNewConfig();
-    void saveConfig(char* path = NULL);
+    void createNewFile(const bool checkIfSaved = true);
 };

@@ -7,13 +7,13 @@ protected:
     SDL_Rect rect;
 
 public:
-    static const int span = 5;
+    static const int SPAN = 5;
 
     virtual void draw() {}
     virtual void update() {}
     virtual void destroy() {}
 
-    void place(int x, int y) {
+    void place(const int x, const int y) {
         rect.x = x;
         rect.y = y;
     }

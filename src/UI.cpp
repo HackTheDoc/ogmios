@@ -3,137 +3,121 @@
 #include "include/Window.h"
 
 UI::UI(int w, int h) {
-    viewport = { 0,0,w,h };
-    border = { 0,h - 1,w,1 };
+    container = { 0, 0, w, h };
+    border = { 0, h - 1, w, 1 };
 
-    saveButton = nullptr;
-    loadButton = nullptr;
-    minusSizeButton = nullptr;
-    sizeButton = nullptr;
-    plusSizeButton = nullptr;
-    themeButton = nullptr;
+    btn_save = nullptr;
+    btn_load = nullptr;
+    btn_minus = nullptr;
+    btn_size = nullptr;
+    btn_plus = nullptr;
+    btn_theme = nullptr;
 
     label = nullptr;
-
 }
 
 UI::~UI() {}
 
 void UI::init() {
-    Manager::SetFontSize(Manager::DEFAULT_FONT_SIZE);
+    Manager::SetFontSize(Config::FONT_DEFAULT_SIZE);
 
-    Manager::SetRenderDrawColor(Window::theme.ui);
+    btn_save = new UIButton(Event::ID::SAVE);
+    btn_save->place(UIElement::SPAN, UIElement::SPAN);
 
-    saveButton = new UIButton(UIButton::ID::SAVE);
-    saveButton->place(UIElement::span, UIElement::span);
-
-    loadButton = new UIButton(UIButton::ID::LOAD);
-    loadButton->place(
-        saveButton->x() + saveButton->width() + UIElement::span,
-        UIElement::span
+    btn_load = new UIButton(Event::ID::LOAD);
+    btn_load->place(
+        btn_save->x() + btn_save->width() + UIElement::SPAN,
+        UIElement::SPAN
     );
 
-    minusSizeButton = new UIButton(UIButton::ID::MINUS_SIZE);
-    minusSizeButton->place(
-        loadButton->x() + loadButton->width() + UIElement::span,
-        UIElement::span
+    btn_minus = new UIButton(Event::ID::MINUS_FONT_SIZE);
+    btn_minus->place(
+        btn_load->x() + btn_load->width() + UIElement::SPAN,
+        UIElement::SPAN
     );
 
-    sizeButton = new UIButton(UIButton::ID::DEFAULT_SIZE);
-    sizeButton->place(
-        minusSizeButton->x() + minusSizeButton->width() + UIElement::span,
-        UIElement::span
+    btn_size = new UIButton(Event::ID::DEFAULT_FONT_SIZE);
+    btn_size->place(
+        btn_minus->x() + btn_minus->width() + UIElement::SPAN,
+        UIElement::SPAN
     );
 
-    plusSizeButton = new UIButton(UIButton::ID::PLUS_SIZE);
-    plusSizeButton->place(
-        sizeButton->x() + sizeButton->width() + UIElement::span,
-        UIElement::span
+    btn_plus = new UIButton(Event::ID::PLUS_FONT_SIZE);
+    btn_plus->place(
+        btn_size->x() + btn_size->width() + UIElement::SPAN,
+        UIElement::SPAN
     );
 
-    themeButton = new UIButton(UIButton::ID::THEME_ICON);
-    themeButton->place(
-        Window::screen.w - themeButton->width() - UIElement::span,
-        UIElement::span
+    btn_theme = new UIButton(Event::ID::CHANGE_THEME);
+    btn_theme->place(
+        Window::screen.w - btn_theme->width() - UIElement::SPAN,
+        UIElement::SPAN
     );
 
-    label = new UILabel("Ogmios Editor");
+    label = new UILabel(Window::Title);
     label->place(
-        themeButton->x() - label->width() - UIElement::span,
-        UIElement::span
+        btn_theme->x() - label->width() - UIElement::SPAN,
+        UIElement::SPAN
     );
 
-    Manager::SetFontSize(Window::theme.fontSize);
+    Manager::SetFontSize(Config::fontSize);
 }
 
 void UI::update() {
-    saveButton->update();
-    loadButton->update();
-    minusSizeButton->update();
-    sizeButton->update();
-    plusSizeButton->update();
-    themeButton->update();
+    btn_save->update();
+    btn_load->update();
+    btn_minus->update();
+    btn_size->update();
+    btn_plus->update();
+    btn_theme->update();
 }
 
 void UI::render() {
-    Manager::DrawFilledRect(&viewport, Window::theme.uiBackground);
+    Manager::DrawFilledRect(&container, Theme::clr_ui_background);
 
-    Manager::SetViewport(&viewport);
+    Manager::SetViewport(&container);
 
-    saveButton->draw();
-    loadButton->draw();
-    minusSizeButton->draw();
-    sizeButton->draw();
-    plusSizeButton->draw();
-    themeButton->draw();
+    btn_save->draw();
+    btn_load->draw();
+    btn_minus->draw();
+    btn_size->draw();
+    btn_plus->draw();
+    btn_theme->draw();
 
     label->draw();
 
-    Manager::DrawFilledRect(&border, Window::theme.ui);
+    Manager::DrawFilledRect(&border, Theme::clr_ui);
 
     Manager::SetViewport(nullptr);
 }
 
 void UI::destroy() {
-    saveButton->destroy();
-    saveButton = nullptr;
-
-    loadButton->destroy();
-    loadButton = nullptr;
-
-    minusSizeButton->destroy();
-    minusSizeButton = nullptr;
-
-    sizeButton->destroy();
-    sizeButton = nullptr;
-
-    plusSizeButton->destroy();
-    plusSizeButton = nullptr;
-
-    themeButton->destroy();
-    themeButton = nullptr;
-
+    btn_save->destroy();
+    btn_load->destroy();
+    btn_minus->destroy();
+    btn_size->destroy();
+    btn_plus->destroy();
+    btn_theme->destroy();
     label->destroy();
-    label = nullptr;
 }
 
 void UI::place(int x, int y) {
-    viewport.x = x;
-    viewport.y = y;
+    container.x = x;
+    container.y = y;
 }
 
 void UI::setWidth(int w) {
-    viewport.w = w;
+    container.w = w;
     border.w = w;
 
-    themeButton->place(
-        Window::screen.w - themeButton->width() - UIElement::span,
-        UIElement::span
+    btn_theme->place(
+        Window::screen.w - btn_theme->width() - UIElement::SPAN,
+        UIElement::SPAN
     );
 
     label->place(
-        themeButton->x() - label->width() - UIElement::span,
-        UIElement::span
+        btn_theme->x() - label->width() - UIElement::SPAN,
+        UIElement::SPAN
     );
 }
 
@@ -143,5 +127,5 @@ void UI::reload() {
 }
 
 int UI::height() {
-    return viewport.h;
+    return container.h;
 }

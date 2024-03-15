@@ -4,15 +4,8 @@
 #include "include/Window.h"
 #include "include/tinyfiledialogs.h"
 
-#include <fstream>
-#include <iostream>
-#include <nlohmann/json.hpp>
-
-const int Editor::DEFAULT_LEFT_MARGIN = 24;
-const int Editor::DEFAULT_LINE_HEIGHT = 22;
-
-int Editor::LeftMargin = Editor::DEFAULT_LEFT_MARGIN;
-int Editor::LineHeight = Editor::DEFAULT_LINE_HEIGHT;
+int Editor::LeftMargin = Config::EDITOR_DEFAULT_LEFT_MARGIN;
+int Editor::LineHeight = Config::EDITOR_DEFAULT_LINE_HEIGHT;
 SDL_Point Editor::Cursor = { 0,0 };
 std::vector<UILine*> Editor::lines = {};
 
@@ -23,9 +16,9 @@ std::vector<std::string> Editor::Format() {
     return text;
 }
 
-Editor::Editor(int w, int h) {
-    viewport = { 0,0,w,h };
-    cursorRect = { 0,0,1,LineHeight };
+Editor::Editor(const int w, const int h) {
+    container = { 0, 0, w, h };
+    cursor = { 0, 0, 1, LineHeight };
 
     selectionLength = 0;
     lineSelected = false;
@@ -38,98 +31,141 @@ Editor::Editor(int w, int h) {
 }
 
 Editor::~Editor() {
-    saveConfig();
+    Config::Save();
+}
+
+#include <iostream>
+void Editor::importData(const Data& d) {
+    Theme::load(d.theme);
+
+    if (d.lastfile.empty() || !fs::exists(d.lastfile)) {
+        createNewFile(false);
+        return;
+    }
+
+    LeftMargin = d.left_margin;
+    LineHeight = d.line_height;
+    Manager::SetFontSize(d.font_size);
+
+    const std::vector<std::string> text = File::LoadTXT(d.lastfile);
+
+    for (uint i = 0; i < text.size(); i++)
+        lines.push_back(new UILine(text[i], i));
+    
+    Cursor = {d.cursor_x, d.cursor_y};
+    scrollPosition = d.scroll_pos;
+
+    updateCursorPlacement();
+
+    fileSaved = true;
+}
+
+Data Editor::exportData() {
+    return {
+        .theme  = Theme::name,
+        .lastfile   = currentFile,
+        .cursor_x   = Cursor.x,
+        .cursor_y   = Cursor.y,
+        .scroll_pos = scrollPosition,
+        .font_size  = Config::fontSize,
+        .left_margin    = LeftMargin,
+        .line_height    = LineHeight,
+    };
 }
 
 void Editor::init() {
-    if (fs::exists("config.json"))
-        loadConfig();
-    else
-        createNewConfig();
+    Config::Load();
 }
 
 void Editor::update() {
-    viewport.h = LineHeight * lines.size();
-    viewport.y = -scrollPosition * LineHeight + Window::ui->height();
+    container.h = 0;
+    for (auto l : lines)
+        container.h += l->height();
+        
+    container.y = Window::ui->height() - scrollPosition * LineHeight * std::max(Config::FONT_DEFAULT_SIZE - Config::fontSize, 1);
 
     for (auto l : lines)
         l->update();
 }
 
 void Editor::render() {
-    Manager::SetViewport(&viewport);
+    Manager::SetViewport(&container);
 
-    for (auto l : lines)
-        l->draw();
+    lines[0]->draw();
+    for (size_t i = 1; i < lines.size(); i++) {
+        UILine* l = lines[i];
+        int y = lines[i-1]->y() + lines[i-1]->height();
+        l->drawAt(y);
+    }
 
-    Manager::DrawRect(&cursorRect, Window::theme.cursor);
+    Manager::DrawRect(&cursor, Theme::clr_cursor);
 
     if (selectionLength != 0) {
-        int length = abs(selectionLength);
+        const int length = abs(selectionLength);
         UILine* l = lines[Cursor.y];
 
         int x = Cursor.x;
         if (selectionLength > 0) x -= length;
 
-        std::string s = l->getText().substr(x, length);
+        const std::string s = l->getText().substr(x, length);
 
-        SDL_Rect selection = { cursorRect.x, cursorRect.y + 2, 0, cursorRect.h - 2 };
+        SDL_Rect selection = { cursor.x, cursor.y + 2, 0, cursor.h - 2 };
 
-        TTF_SizeText(Manager::font, s.c_str(), &selection.w, nullptr);
+        Manager::SizeText(s, &selection.w, nullptr);
         if (selectionLength > 0) selection.x -= selection.w;
 
-        Manager::DrawFilledRect(&selection, Window::theme.selection);
+        Manager::DrawFilledRect(&selection, Theme::clr_selection);
     }
 
     Manager::SetViewport(nullptr);
 }
 
 void Editor::clear() {
-    for (auto l : lines)
+    for (const auto& l : lines)
         l->destroy();
     lines.clear();
 }
 
 void Editor::destroy() {
-    for (auto l : lines)
+    for (const auto& l : lines)
         l->destroy();
     lines.clear();
 }
 
 void Editor::reload() {
-    for (auto l : lines)
+    for (const auto& l : lines)
         l->reload();
 }
 
-void Editor::place(int x, int y) {
-    viewport.x = x;
-    viewport.y = y;
+void Editor::place(const int x, const int y) {
+    container.x = x;
+    container.y = y;
 }
 
-void Editor::setWidth(int w) {
-    viewport.w = w;
+void Editor::setWidth(const int w) {
+    container.w = w;
     reload();
 }
 
 void Editor::updateCursorPlacement() {
     UILine* l = lines[Cursor.y];
 
-    std::string t = l->getText().substr(0, Cursor.x);
-    TTF_SizeText(Manager::font, t.c_str(), &cursorRect.x, nullptr);
-    cursorRect.x += Editor::LeftMargin;
+    const std::string t = l->getText().substr(0, Cursor.x);
+    Manager::SizeText(t, &cursor.x, nullptr);
+    cursor.x += Editor::LeftMargin;
 
-    cursorRect.y = Cursor.y * LineHeight + 4;
-    cursorRect.h = l->height() - 4;
+    cursor.y = l->y() + 2;
+    cursor.h = Editor::LineHeight - 4;
 }
 
 void Editor::updateFontSize(int s) {
-    Window::theme.fontSize += s;
-    if (Window::theme.fontSize < Manager::MIN_FONT_SIZE || Window::theme.fontSize > Manager::MAX_FONT_SIZE) {
-        Window::theme.fontSize -= s;
+    Config::fontSize += s;
+    if (Config::fontSize < Config::FONT_MIN_SIZE || Config::fontSize > Config::FONT_MAX_SIZE) {
+        Config::fontSize -= s;
         return;
     }
 
-    Manager::SetFontSize(Window::theme.fontSize);
+    Manager::SetFontSize(Config::fontSize);
 
     LineHeight += s;
 
@@ -140,14 +176,13 @@ void Editor::updateFontSize(int s) {
     updateCursorPlacement();
 }
 
-
 void Editor::resetFontSize() {
-    Window::theme.fontSize = Manager::DEFAULT_FONT_SIZE;
+    Config::fontSize = Config::FONT_DEFAULT_SIZE;
 
-    Manager::SetFontSize(Manager::DEFAULT_FONT_SIZE);
+    Manager::SetFontSize(Config::FONT_DEFAULT_SIZE);
 
-    LineHeight = DEFAULT_LINE_HEIGHT;
-    LeftMargin = DEFAULT_LEFT_MARGIN;
+    LineHeight = Config::EDITOR_DEFAULT_LINE_HEIGHT;
+    LeftMargin = Config::EDITOR_DEFAULT_LEFT_MARGIN;
 
     reload();
 
@@ -156,7 +191,7 @@ void Editor::resetFontSize() {
     updateCursorPlacement();
 }
 
-void Editor::insertChar(char c) {
+void Editor::insertChar(const char c) {
     lines[Cursor.y]->insert(Cursor.x, c);
     Cursor.x++;
     selectionLength = 0;
@@ -195,7 +230,7 @@ void Editor::deleteNextWord() {
 
 }
 
-void Editor::select(int d) {
+void Editor::select(const int d) {
     if (d < 0 && Cursor.x <= 0) return;
     if (d > 0 && Cursor.x >= lines[Cursor.y]->size()) return;
 
@@ -229,7 +264,7 @@ bool Editor::deleteSelection() {
         l->destroy();
         lines.erase(lines.begin() + Cursor.y);
 
-        for (int i = Cursor.y; i < (int)lines.size(); i++) {
+        for (uint i = Cursor.y; i < lines.size(); i++) {
             lines[i]->setNumber(i);
         }
 
@@ -270,17 +305,17 @@ void Editor::insertNewLine() {
     else if (selectionLength != 0)
         deleteSelection();
 
-    std::string text = l->getText();
+    const std::string text = l->getText();
 
-    std::string newLine = text.substr(Cursor.x);
-    std::string oldLine = text.substr(0, Cursor.x);
+    const std::string newLine = text.substr(Cursor.x);
+    const std::string oldLine = text.substr(0, Cursor.x);
 
     l->setText(oldLine);
 
     UILine* nl = new UILine(newLine, Cursor.y + 1);
     lines.insert(lines.begin() + Cursor.y + 1, nl);
 
-    for (int i = nl->getNumber() + 1; i < (int)lines.size(); i++) {
+    for (uint i = nl->getNumber() + 1; i < lines.size(); i++) {
         UILine* l = lines[i];
         l->setNumber(i);
     }
@@ -295,12 +330,12 @@ bool Editor::deleteCurrentLine() {
     if (Cursor.x != 0 || Cursor.y <= 0) return false;
 
     UILine* l = lines[Cursor.y];
-    std::string oldLine = l->getText();
+    const std::string oldLine = l->getText();
 
     l->destroy();
     lines.erase(lines.begin() + Cursor.y);
 
-    for (int i = Cursor.y; i < (int)lines.size(); i++) {
+    for (uint i = Cursor.y; i < lines.size(); i++) {
         lines[i]->setNumber(i);
     }
 
@@ -309,9 +344,8 @@ bool Editor::deleteCurrentLine() {
     Cursor.x = (int)l->size();
     updateCursorPlacement();
 
-    if (!oldLine.empty()) {
+    if (!oldLine.empty())
         l->append(oldLine);
-    }
 
     return true;
 }
@@ -323,14 +357,13 @@ bool Editor::deleteNextLine() {
         return false;
 
     UILine* lToDelete = lines[Cursor.y + 1];
-    std::string oldLine = lToDelete->getText();
+    const std::string oldLine = lToDelete->getText();
 
     lToDelete->destroy();
     lines.erase(lines.begin() + Cursor.y + 1);
 
-    if (!oldLine.empty()) {
+    if (!oldLine.empty())
         l->append(oldLine);
-    }
 
     return true;
 }
@@ -355,7 +388,7 @@ void Editor::jumpToLineStart() {
 }
 
 void Editor::jumpToLineEnd() {
-    Cursor.x = static_cast<int>(lines[Cursor.y]->size());
+    Cursor.x = (int)lines[Cursor.y]->size();
     updateCursorPlacement();
 
     selectionLength = 0;
@@ -367,26 +400,24 @@ void Editor::moveCursorUp() {
     selectionLength = 0;
 
     Cursor.y--;
-    Cursor.x = std::min(Cursor.x, static_cast<int>(lines[Cursor.y]->size()));
+    Cursor.x = std::min(Cursor.x, (int)lines[Cursor.y]->size());
 
-    if (Cursor.y < scrollPosition) {
+    if (Cursor.y < scrollPosition)
         scroll(-1);
-    }
 
     updateCursorPlacement();
 }
 
 bool Editor::moveCursorDown() {
-    if (Cursor.y >= static_cast<int>(lines.size() - 1)) return false;
+    if (Cursor.y >= (int)lines.size() - 1) return false;
 
     selectionLength = 0;
 
     Cursor.y++;
-    Cursor.x = std::min(Cursor.x, static_cast<int>(lines[Cursor.y]->size()));
+    Cursor.x = std::min(Cursor.x, (int)lines[Cursor.y]->size());
 
-    if ((Cursor.y - scrollPosition + 1) * LineHeight > Window::screen.h - Window::ui->height()) {
+    if ((Cursor.y - scrollPosition + 2) * LineHeight > Window::screen.h - Window::ui->height())
         scroll(1);
-    }
 
     updateCursorPlacement();
 
@@ -396,11 +427,11 @@ bool Editor::moveCursorDown() {
 void Editor::moveCursorLeft() {
     if (Cursor.x == 0 && Cursor.y > 0) {
         moveCursorUp();
-        Cursor.x = static_cast<int>(lines[Cursor.y]->size());
+        Cursor.x = (int)lines[Cursor.y]->size();
     }
-    else if (Cursor.x > 0) {
+    else if (Cursor.x > 0)
         Cursor.x--;
-    }
+    
     selectionLength = 0;
 
     updateCursorPlacement();
@@ -411,9 +442,9 @@ void Editor::moveCursorRight() {
         moveCursorDown();
         Cursor.x = 0;
     }
-    else if (Cursor.x < (int)lines[Cursor.y]->size()) {
+    else if (Cursor.x < (int)lines[Cursor.y]->size())
         Cursor.x++;
-    }
+    
     selectionLength = 0;
     updateCursorPlacement();
 }
@@ -421,25 +452,23 @@ void Editor::moveCursorRight() {
 void Editor::scroll(int s) {
     scrollPosition += s;
 
-    scrollPosition = std::max(0, std::min(scrollPosition, static_cast<int>(lines.size() - 1)));
+    scrollPosition = std::max(0, std::min(scrollPosition, (int)lines.size() - 1));
 }
 
-void Editor::saveCurrent() {
+void Editor::saveToCurrentFile() {
     if (fileSaved) {
-        saveNew();
+        saveToNewFile();
         return;
     }
 
     bool success = File::Export(currentFile, Format());
 
-    if (success)
-        saveConfig();
-    else
+    if (!success)
         tinyfd_messageBox("Ogmios", "Cannot save the file !", "ok", "error", 1);
 }
 
-void Editor::saveNew() {
-    char* path = tinyfd_saveFileDialog("Save", currentFile.c_str(), 4, File::Filters, NULL);
+void Editor::saveToNewFile() {
+    char* path = tinyfd_saveFileDialog("Save", currentFile.c_str(), 0, NULL, NULL);
 
     fileSaved = File::Export(path, Format());
     if (fileSaved)
@@ -448,8 +477,13 @@ void Editor::saveNew() {
         tinyfd_messageBox("Ogmios", "Cannot save the file !", "ok", "error", 1);
 }
 
+void Editor::save(const bool isnew) {
+    if (isnew) saveToNewFile();
+    else saveToCurrentFile();
+}
+
 void Editor::load() {
-    char* path = tinyfd_openFileDialog("Open", currentFile.c_str(), 4, File::Filters, NULL, 0);
+    char* path = tinyfd_openFileDialog("Open", currentFile.c_str(), 4, File::FILTERS, NULL, 0);
 
     if (path != NULL) {
         lines.clear();
@@ -476,13 +510,13 @@ void Editor::setClipboardText() {
         return;
     }
 
-    int length = abs(selectionLength);
+    const int length = abs(selectionLength);
     UILine* l = lines[Cursor.y];
 
     int x = Cursor.x;
     if (selectionLength > 0) x -= length;
 
-    std::string s = l->getText().substr(x, length);
+    const std::string s = l->getText().substr(x, length);
 
     SDL_SetClipboardText(s.c_str());
 }
@@ -500,16 +534,14 @@ void Editor::pasteClipboardText() {
     SDL_free(cbt);
 }
 
-void Editor::newFile(bool checkIfSaved) {
+void Editor::createNewFile(bool checkIfSaved) {
     if (checkIfSaved && !fileSaved) {
-        std::cout << "file not save !!!!" << std::endl;
-        int uinput = tinyfd_messageBox("Title", "File not saved!\nDo you want to save?", "yesnocancel", "warning", 0);
+        const int uinput = tinyfd_messageBox("Title", "File not saved!\nDo you want to save?", "yesnocancel", "warning", 0);
 
-        if (uinput == 0) {
+        if (uinput == 0)
             return;
-        }
         else if (uinput == 1)
-            saveCurrent();
+            saveToCurrentFile();
     }
 
     clear();
@@ -520,76 +552,4 @@ void Editor::newFile(bool checkIfSaved) {
     jumpToFileStart();
 
     currentFile = "output/unknown.txt";
-}
-
-void Editor::loadConfig() {
-    std::ifstream infile("config.json");
-    nlohmann::json config;
-    infile >> config;
-    infile.close();
-
-    currentFile = config["last file"];
-    if (currentFile.empty() || !fs::exists(currentFile)) {
-        newFile(false);
-        return;
-    }
-
-    std::vector<std::string> text = File::LoadTXT(currentFile);
-
-    LeftMargin = config["editor left margin"];
-    Manager::SetFontSize(config["font size"]);
-    LineHeight = config["line height"];
-
-    for (unsigned int i = 0; i < text.size(); i++) {
-        UILine* l = new UILine(text[i], i);
-        lines.push_back(l);
-    }
-
-    Cursor.x = config["cursor x"];
-    Cursor.y = config["cursor y"];
-    scrollPosition = config["scroll position"];
-
-    updateCursorPlacement();
-
-    fileSaved = true;
-}
-
-void Editor::createNewConfig() {
-    nlohmann::json config = {
-        {"last file"            , "output/unknown.txt"          },
-        {"cursor x"             , 0                             },
-        {"cursor y"             , 0                             },
-        {"scroll position"      , 0                             },
-        {"editor left margin"   , DEFAULT_LEFT_MARGIN           },
-        {"line height"          , DEFAULT_LINE_HEIGHT           },
-        {"font size"            , Manager::DEFAULT_FONT_SIZE    }
-    };
-
-    std::ofstream outfile("config.json");
-    outfile << std::setw(4) << config;
-    outfile.close();
-
-    newFile(false);
-}
-
-void Editor::saveConfig(char* path) {
-    std::ifstream infile("config.json");
-    nlohmann::json config;
-    infile >> config;
-    infile.close();
-
-    if (path != NULL)
-        config["last file"] = path;
-
-    config["cursor x"] = Cursor.x;
-    config["cursor y"] = Cursor.y;
-    config["scroll position"] = scrollPosition;
-
-    config["editor left margin"] = Editor::LeftMargin;
-    config["line height"] = Editor::LineHeight;
-    config["font size"] = Window::theme.fontSize;
-
-    std::ofstream outfile("config.json");
-    outfile << std::setw(4) << config;
-    outfile.close();
 }
